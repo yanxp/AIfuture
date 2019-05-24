@@ -40,7 +40,19 @@ def cosmetric(galleryFeature, probeFeature):
         metric.append(d["index"])
 		
     return metric
-
+def edumetric(galleryFeature, probeFeature, THRESHOD = 1.0):
+    LEN_THRESHOD = max(1, min(10, int(len(galleryFeature) * 0.1))) # 1 <= x <= 10
+    res = []
+    for i, p in enumerate(probeFeature):
+        metric = np.zeros( (len(galleryFeature),) )
+        for j, g in enumerate(galleryFeature):
+            metric[j] = np.sum((p - g) ** 2)
+        idx = np.argsort(metric)
+        if(metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD):
+            res.append(idx[0])
+        else:
+            res.append(-1)
+    return res
 class TripletNetwork(nn.Module):
     def __init__(self):
         super(TripletNetwork, self).__init__()
@@ -102,16 +114,16 @@ if __name__ == '__main__':
 
     galleryFeature = np.array(galleryFeature)
     probeFeature = np.array(probeFeature)
-    metric = cosmetric(galleryFeature, probeFeature)
-
-    k = 0
+    # metric = cosmetric(galleryFeature, probeFeature)
     filename = rootpath + "ground_truth.csv"
     csvFile = open(filename, 'r')
     readerC = csv.reader(csvFile)
 
-    for item in readerC:
-        if metric[int(item[0])] == int(item[1]):
-            k += 1
-    auc = k / len(metric)
-    print(k)
-    print(auc)
+    for th in [0, 0.6, 0.8, 1.0]:
+        k = 0
+        metric = edumetric(galleryFeature, probeFeature, th)
+        for item in readerC:
+            if metric[int(item[0])] == int(item[1]):
+                k += 1
+        auc = k / len(metric)
+        print('threshod: {} , correct: {}, auc: {}'.foramt(th, k, auc))
