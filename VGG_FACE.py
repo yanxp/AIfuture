@@ -1,7 +1,7 @@
 
 import torch
 import torch.nn as nn
-import torch.legacy.nn as lnn
+# import torch.legacy.nn as lnn
 
 from functools import reduce
 

@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-
+from __future__ import print_function, division
 import time
 import argparse
 import os
@@ -38,24 +38,25 @@ def cosmetric(galleryFeature, probeFeature):
                 d["value"] = cos
                 d["index"] = j
 
-        metric.append((d["index"], d['value']))	
+        metric.append((d["index"], d['value']))
     return metric
 
-def edumetric(galleryFeature, probeFeature):
-    THRESHOD = 1.0
-    LEN_THRESHOD = max(1, min(10, int(len(galleryFeature) * 0.1))) # 1 <= x <= 10
+def edumetric(galleryFeature, probeFeature, THRESHOD = 0.375):
+    LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
     res = []
     for i, p in enumerate(probeFeature):
         metric = np.zeros( (len(galleryFeature),) )
+        p = p / np.linalg.norm(p)
         for j, g in enumerate(galleryFeature):
+            g = g / np.linalg.norm(g)
             metric[j] = np.sum((p - g) ** 2)
         idx = np.argsort(metric)
-        if(metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD):
+        if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
             res.append(idx[0])
         else:
             res.append(-1)
     return res
-        
+
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
     """
     imgset_rpath: 数据图片库的相对路径，例如数据集的相对路径为test_set/testB，那么图片库的相对路径为test_set/testB/images
@@ -111,7 +112,7 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     galleryFeature = np.array(galleryFeature)
     probeFeature = np.array(probeFeature)
     preds = edumetric(galleryFeature, probeFeature)
-    
+
     # 3. prepare result
     result = [] # result = [("1", "2"), ("2", "4")]
     for i, p in enumerate(preds):
@@ -119,9 +120,8 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
             result.append((probe_list[i][0], gallery_list[p][0]))
         else:
             result.append((probe_list[i][0], "-1"))
-    
-    return result
 
+    return result
 
 def parse_args():
     parser = argparse.ArgumentParser(
