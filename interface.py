@@ -4,6 +4,7 @@ import time
 import argparse
 import os
 from PIL import Image
+import cv2
 import numpy as np
 from sklearn import metrics
 
@@ -13,7 +14,15 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 
 import VGG_FACE
-
+from deploy import face_model
+class FaceModelArgs(object):
+    def __init__(self):
+        self.image_size = "256,256"
+        self.gpu = 0
+        self.det = 0
+        self.flip = 0
+        self.threshod = 1.24
+        self.model = ''
 class TripletNetwork(nn.Module):
     def __init__(self):
         super(TripletNetwork, self).__init__()
@@ -57,6 +66,14 @@ def edumetric(galleryFeature, probeFeature, THRESHOD = 0.375):
             res.append(-1)
     return res
 
+def detect_or_return_origin(img_path, model):
+    img = cv2.imread(img_path)
+    new_img = model.get_input(img)
+    if new_img is None:
+        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    else:
+        return new_img
+        
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
     """
     imgset_rpath: 数据图片库的相对路径，例如数据集的相对路径为test_set/testB，那么图片库的相对路径为test_set/testB/images
@@ -88,6 +105,7 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     net = net.cuda()
     net.eval()
 
+    detector = face_model.FaceModel(FaceModelArgs())
     # 2. get features
     probe_list = [(k, v) for k, v in probe_dict.items()]
     gallery_list = [(k, v) for k, v in gallery_dict.items()]
@@ -95,7 +113,8 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     probeFeature = []
     for _, item in probe_list:
         img0_path = os.path.join(imgset_rpath, item)
-        img0 = Image.open(img0_path).convert("RGB")
+        img0 = detect_or_return_origin(img0_path, detector)
+        #img0 = Image.open(img0_path).convert("RGB")
         img0 = data_transforms(img0)
         img0 = Variable(img0.unsqueeze(0), volatile=True).cuda()
         probefeature = net(img0)
@@ -103,7 +122,8 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
 
     for _, item in gallery_list:
         img1_path = os.path.join(imgset_rpath, item)
-        img1 = Image.open(img1_path).convert("RGB")
+        img1 = detect_or_return_origin(img1_path, detector)
+        #img1 = Image.open(img1_path).convert("RGB")
         img1 = data_transforms(img1)
         img1 = Variable(img1.unsqueeze(0), volatile=True).cuda()
         galleryfeature = net(img1)
