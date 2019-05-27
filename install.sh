@@ -1,6 +1,6 @@
 #!/bin/bash
 # pip install -r requirements.txt
-#conda env create -f environment.yaml
+# conda env create -f environment.yaml
 conda create -n afteam_911 python=3.6
 
 # >>> conda init >>>

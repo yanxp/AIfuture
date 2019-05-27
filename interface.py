@@ -21,8 +21,9 @@ class FaceModelArgs(object):
         self.gpu = 0
         self.det = 0
         self.flip = 0
-        self.threshod = 1.24
+        self.threshold = 1.24
         self.model = ''
+
 class TripletNetwork(nn.Module):
     def __init__(self):
         super(TripletNetwork, self).__init__()
@@ -50,7 +51,7 @@ def cosmetric(galleryFeature, probeFeature):
         metric.append((d["index"], d['value']))
     return metric
 
-def edumetric(galleryFeature, probeFeature, THRESHOD = 0.375):
+def edumetric(galleryFeature, probeFeature, THRESHOD = 0.4):
     LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
     res = []
     for i, p in enumerate(probeFeature):
@@ -70,10 +71,10 @@ def detect_or_return_origin(img_path, model):
     img = cv2.imread(img_path)
     new_img = model.get_input(img)
     if new_img is None:
-        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     else:
-        return new_img
-        
+        return Image.fromarray(new_img)
+
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
     """
     imgset_rpath: 数据图片库的相对路径，例如数据集的相对路径为test_set/testB，那么图片库的相对路径为test_set/testB/images
@@ -111,18 +112,27 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     gallery_list = [(k, v) for k, v in gallery_dict.items()]
     galleryFeature = []
     probeFeature = []
+    prob_imgs = []
+    gallery_imgs = []
     for _, item in probe_list:
         img0_path = os.path.join(imgset_rpath, item)
         img0 = detect_or_return_origin(img0_path, detector)
+        prob_imgs.append(img0)
+
+    for _, item in gallery_list:
+        img1_path = os.path.join(imgset_rpath, item)
+        img1 = detect_or_return_origin(img1_path, detector)
+        gallery_imgs.append(img1)
+    del detector
+
+    for img0 in prob_imgs:
         #img0 = Image.open(img0_path).convert("RGB")
         img0 = data_transforms(img0)
         img0 = Variable(img0.unsqueeze(0), volatile=True).cuda()
         probefeature = net(img0)
         probeFeature.append(probefeature.data.cpu().numpy())
 
-    for _, item in gallery_list:
-        img1_path = os.path.join(imgset_rpath, item)
-        img1 = detect_or_return_origin(img1_path, detector)
+    for img1 in gallery_imgs:
         #img1 = Image.open(img1_path).convert("RGB")
         img1 = data_transforms(img1)
         img1 = Variable(img1.unsqueeze(0), volatile=True).cuda()

@@ -11,7 +11,7 @@ try:
 except ImportError:
     izip = zip
 
-from helper import nms, adjust_input, generate_bbox, detect_first_stage_warpper
+from .helper import nms, adjust_input, generate_bbox, detect_first_stage_warpper
 
 class MtcnnDetector(object):
     """
@@ -52,7 +52,7 @@ class MtcnnDetector(object):
         # load 4 models from folder
         models = ['det1', 'det2', 'det3','det4']
         models = [ os.path.join(model_folder, f) for f in models]
-        
+
         self.PNets = []
         for i in range(num_worker):
             workner_net = mx.model.FeedForward.load(models[0], 1, ctx=ctx)
@@ -118,7 +118,7 @@ class MtcnnDetector(object):
         bbox[:, 0:4] = bbox[:, 0:4] + aug
         return bbox
 
- 
+
     def pad(self, bboxes, w, h):
         """
             pad the the bboxes, alse restrict the size of it
@@ -188,7 +188,7 @@ class MtcnnDetector(object):
                 yield l[i:i + n]
         num_list = range(number)
         return list(chunks(num_list, self.num_worker))
-        
+
     def detect_face_limited(self, img, det_type=2):
         height, width, _ = img.shape
         if det_type>=2:
@@ -260,7 +260,7 @@ class MtcnnDetector(object):
         pick = nms(total_boxes, 0.7, 'Min')
         total_boxes = total_boxes[pick]
         points = points[pick]
-        
+
         if not self.accurate_landmark:
             return total_boxes, points
 
@@ -353,7 +353,7 @@ class MtcnnDetector(object):
             #    return_boxes = self.detect_first_stage(img, scale, 0)
             #    if return_boxes is not None:
             #        total_boxes.append(return_boxes)
-            
+
             sliced_index = self.slice_index(len(scales))
             total_boxes = []
             for batch in sliced_index:
@@ -362,13 +362,13 @@ class MtcnnDetector(object):
                 local_boxes = map( detect_first_stage_warpper, \
                         izip(repeat(img), self.PNets[:len(batch)], [scales[i] for i in batch], repeat(self.threshold[0])) )
                 total_boxes.extend(local_boxes)
-            
-            # remove the Nones 
+
+            # remove the Nones
             total_boxes = [ i for i in total_boxes if i is not None]
 
             if len(total_boxes) == 0:
                 return None
-            
+
             total_boxes = np.vstack(total_boxes)
 
             if total_boxes.size == 0:
@@ -468,7 +468,7 @@ class MtcnnDetector(object):
         pick = nms(total_boxes, 0.7, 'Min')
         total_boxes = total_boxes[pick]
         points = points[pick]
-        
+
         if not self.accurate_landmark:
             return total_boxes, points
 
@@ -523,7 +523,7 @@ class MtcnnDetector(object):
                 input list
         Retures:
         -------
-            colMat: 
+            colMat:
 
         """
         assert len(pts_list) > 0
@@ -539,8 +539,8 @@ class MtcnnDetector(object):
             find transform between shapes
         Parameters:
         ----------
-            from_shape: 
-            to_shape: 
+            from_shape:
+            to_shape:
         Retures:
         -------
             tran_m:
@@ -601,7 +601,7 @@ class MtcnnDetector(object):
         Retures:
         -------
             crop_imgs: list, n
-                cropped and aligned faces 
+                cropped and aligned faces
         """
         crop_imgs = []
         for p in points:

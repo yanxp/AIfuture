@@ -11,6 +11,16 @@ import os
 from PIL import Image
 from sklearn import metrics
 import VGG_FACE
+from deploy import face_model
+import cv2
+class FaceModelArgs(object):
+    def __init__(self):
+        self.image_size = "256,256"
+        self.gpu = 0
+        self.det = 0
+        self.flip = 0
+        self.threshold = 1.24
+        self.model = ''
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
@@ -66,7 +76,13 @@ class TripletNetwork(nn.Module):
     def forward(self, x):
         out = self.model(x)
         return out
-
+def detect_or_return_origin(img_path, model):
+    img = cv2.imread(img_path)
+    new_img = model.get_input(img)
+    if new_img is None:
+        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    else:
+        return Image.fromarray(new_img)
 if __name__ == '__main__':
     args = parse_args()
 
@@ -93,28 +109,41 @@ if __name__ == '__main__':
     gallery = rootpath + "gallery.csv"
     probe = rootpath + "probe.csv"
     img_dir = rootpath + "images/"
+    prob_imgs = []
+    gallery_imgs = []
+
+    detector = face_model.FaceModel(FaceModelArgs())
 
     probeFile = open(probe, "r")
     readerProbe = csv.reader(probeFile)
-    for item in readerProbe:
-        img0_path = img_dir + item[1]
-        img0 = Image.open(img0_path).convert("RGB")
-        img0 = data_transforms(img0)
-        img0 = Variable(img0.unsqueeze(0), volatile=True).cuda()
-        probefeature = net(img0)
-        probeFeature.append(probefeature.data.cpu().numpy())
+    for _, item in readerProbe:
+        img0_path = os.path.join(img_dir, item)
+        img0 = detect_or_return_origin(img0_path, detector)
+        prob_imgs.append(img0)
     probeFile.close()
 
     galleryFile = open(gallery, "r")
     readerGallery = csv.reader(galleryFile)
-    for item in readerGallery:
-        img1_path = img_dir + item[1]
-        img1 = Image.open(img1_path).convert("RGB")
+    for _, item in readerGallery:
+        img1_path = os.path.join(img_dir, item)
+        img1 = detect_or_return_origin(img1_path, detector)
+        gallery_imgs.append(img1)
+    galleryFile.close()
+
+    del detector
+
+    for img0 in prob_imgs:
+        img0 = data_transforms(img0)
+        img0 = Variable(img0.unsqueeze(0), volatile=True).cuda()
+        probefeature = net(img0)
+        probeFeature.append(probefeature.data.cpu().numpy())
+
+
+    for img1 in gallery_imgs:
         img1 = data_transforms(img1)
         img1 = Variable(img1.unsqueeze(0), volatile=True).cuda()
         galleryfeature = net(img1)
         galleryFeature.append(galleryfeature.data.cpu().numpy())
-    galleryFile.close()
 
     galleryFeature = np.array(galleryFeature)
     probeFeature = np.array(probeFeature)
@@ -122,8 +151,7 @@ if __name__ == '__main__':
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 
-
-    for th in [0.3,0.35 ,0.375, 0.4]:
+    for th in [0.375, 0.4, 0.425, 0.45]:
         k = 0
         metric = edumetric(galleryFeature, probeFeature, th)
         #metric = cosmetric(galleryFeature, probeFeature)
