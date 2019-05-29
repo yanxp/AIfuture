@@ -9,7 +9,6 @@ from torch.autograd import Variable
 import torch.nn as nn
 import os
 from PIL import Image
-from sklearn import metrics
 import VGG_FACE
 from retinaface import RetinaFace
 import cv2
@@ -78,36 +77,14 @@ class TripletNetwork(nn.Module):
         out = self.model(x)
         return out
 
-def get_image_scales(img):
-    scales = [320, 640] # min size, max size
-    im_shape = img.shape
-    target_size = scales[0]
-    max_size = scales[1]
-    im_size_min = np.min(im_shape[0:2])
-    im_size_max = np.max(im_shape[0:2])
-
-    im_scale = float(target_size) / float(im_size_min)
-    if np.round(im_scale * im_size_max) > max_size:
-        im_scale = float(max_size) / float(im_size_max)
-    return [im_scale]
-
 def detect_or_return_origin(img_path, model):
     img = cv2.imread(img_path)
-    scales = get_image_scales(img)
-    faces, landmarks = model.detect(img, scales=scales)
+    new_img = model.get_input(img)
 
-    if faces is None:
+    if new_img is None:
         return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     else:
-        det = faces[0].astype(np.int)
-        margin = 44 # extend the box
-        bb = np.zeros(4, dtype=np.int32)
-        bb[0] = np.maximum(det[0]-margin/2, 0)
-        bb[1] = np.maximum(det[1]-margin/2, 0)
-        bb[2] = np.minimum(det[2]+margin/2, img.shape[1])
-        bb[3] = np.minimum(det[3]+margin/2, img.shape[0])
-        new_img = img[bb[1]:bb[3],bb[0]:bb[2],:] 
-        return Image.fromarray(cv2.cvtColor(new_img, cv2.COLOR_BGR2RGB))
+        return Image.fromarray(new_img)
 
 if __name__ == '__main__':
     args = parse_args()
@@ -177,7 +154,7 @@ if __name__ == '__main__':
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 
-    for th in [0.375, 0.4, 0.425, 0.45]:
+    for th in [0.3, 0.35, 0.375, 0.4, 0.425]:
         k = 0
         metric = edumetric(galleryFeature, probeFeature, th)
         #metric = cosmetric(galleryFeature, probeFeature)

@@ -14,6 +14,8 @@ from .rcnn.processing.bbox_transform import clip_boxes
 from .rcnn.processing.generate_anchor import generate_anchors_fpn, anchors_plane
 from .rcnn.processing.nms import gpu_nms_wrapper, cpu_nms_wrapper
 from .rcnn.processing.bbox_transform import bbox_overlaps
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'common'))
+import face_preprocess
 
 class RetinaFace:
   def __init__(self, prefix, epoch, ctx_id=0, network='net3', nms=0.4, nocrop=False, decay4 = 0.5, vote=False):
@@ -132,22 +134,45 @@ class RetinaFace:
       self._feat_stride_fpn = [32,16,8]
     print('sym size:', len(sym))
 
+    self.image_scales = [640, 640]
     image_size = (640, 640)
     self.model = mx.mod.Module(symbol=sym, context=self.ctx, label_names = None)
     self.model.bind(data_shapes=[('data', (1, 3, image_size[0], image_size[1]))], for_training=False)
     self.model.set_params(arg_params, aux_params)
 
-  def get_input(self, img):
-    im = img.astype(np.float32)
-    im_tensor = np.zeros((1, 3, im.shape[0], im.shape[1]))
-    for i in range(3):
-        im_tensor[0, i, :, :] = (im[:, :, 2 - i]/self.pixel_scale - self.pixel_means[2 - i])/self.pixel_stds[2-i]
-    #if self.debug:
-    #  timeb = datetime.datetime.now()
-    #  diff = timeb - timea
-    #  print('X2 uses', diff.total_seconds(), 'seconds')
-    data = nd.array(im_tensor)
-    return data
+  def get_scales(self, img):
+    im_shape = img.shape
+    target_size = self.image_scales[0]
+    max_size = self.image_scales[1]
+    im_size_min = np.min(im_shape[0:2])
+    im_size_max = np.max(im_shape[0:2])
+    #if im_size_min>target_size or im_size_max>max_size:
+    im_scale = float(target_size) / float(im_size_min)
+    # prevent bigger axis from being more than max_size:
+    if np.round(im_scale * im_size_max) > max_size:
+        im_scale = float(max_size) / float(im_size_max)
+
+    print('im_scale', im_scale)
+
+    scales = [im_scale]
+    return scales
+
+  def get_input(self, img, **kwargs):
+    scales = self.get_scales(img)
+    ret = self.detect(img, scales=scales, **kwargs)
+    if ret is None:
+      return None
+    bbox, points = ret
+    if bbox.shape[0]==0:
+      return None
+    bbox = bbox[0,0:4]
+    #points = points[0,:].reshape((2,5)).T
+    #print(bbox)
+    #print(points)
+    nimg = face_preprocess.preprocess(img, bbox)
+    nimg = cv2.cvtColor(nimg, cv2.COLOR_BGR2RGB)
+    #aligned = np.transpose(nimg, (2,0,1))
+    return nimg #aligned
 
   def detect(self, img, threshold=0.5, scales=[1.0], do_flip=False):
     #print('in_detect', threshold, scales, do_flip, do_nms)
