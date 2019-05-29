@@ -35,3 +35,7 @@ conda activate afteam_911
 
 conda env update -f environment.yaml
 pip install --upgrade -r requirements.txt
+
+cd retinaface
+make
+cd -

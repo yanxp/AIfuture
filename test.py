@@ -11,16 +11,8 @@ import os
 from PIL import Image
 from sklearn import metrics
 import VGG_FACE
-from deploy import face_model
+from retinaface import RetinaFace
 import cv2
-class FaceModelArgs(object):
-    def __init__(self):
-        self.image_size = "256,256"
-        self.gpu = 0
-        self.det = 0
-        self.flip = 0
-        self.threshold = 1.24
-        self.model = ''
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
@@ -30,6 +22,15 @@ def parse_args():
                         help='model', type=str)
     parser.add_argument('--prediction-file', dest='ppath',
                         help='prediction file path', type=str)
+    # RetinaNet: prefix, epoch, ctx_id=0, network='net3', nms=0.4, nocrop=False, decay4 = 0.5, vote=False
+    parser.add_argument('--pretrained-detector', dest="pdetect",
+                        help="detector checkpoint prefix", default="./models/R50")
+    parser.add_argument('--detector-epoch', dest='depoch', default=0)
+    parser.add_argument('--detector-network', dest="dnet",
+                        help="detector config type", default='net3')
+    parser.add_argument('--nms', type=float, default=0.4)
+    parser.add_argument('--nocrop', action="store_true")
+    parser.add_argument('--box-vote', action="store_true", dest="dVote")
     args = parser.parse_args()
     return args
 
@@ -76,13 +77,38 @@ class TripletNetwork(nn.Module):
     def forward(self, x):
         out = self.model(x)
         return out
+
+def get_image_scales(img):
+    scales = [320, 640] # min size, max size
+    im_shape = img.shape
+    target_size = scales[0]
+    max_size = scales[1]
+    im_size_min = np.min(im_shape[0:2])
+    im_size_max = np.max(im_shape[0:2])
+
+    im_scale = float(target_size) / float(im_size_min)
+    if np.round(im_scale * im_size_max) > max_size:
+        im_scale = float(max_size) / float(im_size_max)
+    return [im_scale]
+
 def detect_or_return_origin(img_path, model):
     img = cv2.imread(img_path)
-    new_img = model.get_input(img)
-    if new_img is None:
+    scales = get_image_scales(img)
+    faces, landmarks = model.detect(img, scales=scales)
+
+    if faces is None:
         return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     else:
-        return Image.fromarray(new_img)
+        det = faces[0].astype(np.int)
+        margin = 44 # extend the box
+        bb = np.zeros(4, dtype=np.int32)
+        bb[0] = np.maximum(det[0]-margin/2, 0)
+        bb[1] = np.maximum(det[1]-margin/2, 0)
+        bb[2] = np.minimum(det[2]+margin/2, img.shape[1])
+        bb[3] = np.minimum(det[3]+margin/2, img.shape[0])
+        new_img = img[bb[1]:bb[3],bb[0]:bb[2],:] 
+        return Image.fromarray(cv2.cvtColor(new_img, cv2.COLOR_BGR2RGB))
+
 if __name__ == '__main__':
     args = parse_args()
 
@@ -112,7 +138,7 @@ if __name__ == '__main__':
     prob_imgs = []
     gallery_imgs = []
 
-    detector = face_model.FaceModel(FaceModelArgs())
+    detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=args.dVote)
 
     probeFile = open(probe, "r")
     readerProbe = csv.reader(probeFile)
