@@ -51,6 +51,22 @@ def cosmetric(galleryFeature, probeFeature):
         metric.append(d["index"])
     return metric
 
+def edumetric(galleryFeature, probeFeature, THRESHOD = 0.04):
+    LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
+    res = []
+    for i, p in enumerate(probeFeature):
+        metric = np.zeros( (len(galleryFeature),) )
+        p = p / np.linalg.norm(p)
+        for j, g in enumerate(galleryFeature):
+            g = g / np.linalg.norm(g)
+            metric[j] = np.sum((p - g) ** 2)
+        idx = np.argsort(metric)
+        if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
+            res.append(idx[0])
+        else:
+            res.append(-1)
+    return res
+
 class TripletNetwork(nn.Module):
     def __init__(self):
         super(TripletNetwork, self).__init__()
@@ -118,7 +134,9 @@ if __name__ == '__main__':
 
     galleryFeature = np.array(galleryFeature)
     probeFeature = np.array(probeFeature)
-    metric = cosmetric(galleryFeature, probeFeature)
+    
+    metric = edumetric(galleryFeature, probeFeature)
+    #metric = cosmetric(galleryFeature, probeFeature)
 
     k = 0
     filename = rootpath + "ground_truth.csv"
@@ -129,5 +147,4 @@ if __name__ == '__main__':
         if metric[int(item[0])] == int(item[1]):
             k += 1
     auc = k / len(metric)
-    print(k)
-    print(auc)
+    print('accuracy:',auc)
