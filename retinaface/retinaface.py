@@ -134,8 +134,8 @@ class RetinaFace:
       self._feat_stride_fpn = [32,16,8]
     print('sym size:', len(sym))
 
-    self.TEST_SCALES = [200, 350, 500, 650, 800]
-    self.target_size = (640, 640)
+    self.TEST_SCALES = [320, 640]
+    self.target_size = (640, 800)
     image_size = (640, 640)
     self.model = mx.mod.Module(symbol=sym, context=self.ctx, label_names = None)
     self.model.bind(data_shapes=[('data', (1, 3, image_size[0], image_size[1]))], for_training=False)
@@ -165,9 +165,9 @@ class RetinaFace:
     if bbox.shape[0]==0:
       return None
     bbox = bbox[0,0:4]
-    nimg = face_preprocess.preprocess(img, bbox)
+    nimg = face_preprocess.preprocess(img, bbox, margin=20)
     nimg = cv2.cvtColor(nimg, cv2.COLOR_BGR2RGB)
-    return nimg 
+    return nimg
 
   def detect(self, img, threshold=0.5, scales=[1.0], do_flip=False):
     #print('in_detect', threshold, scales, do_flip, do_nms)

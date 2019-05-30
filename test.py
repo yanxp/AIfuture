@@ -79,7 +79,7 @@ class TripletNetwork(nn.Module):
 
 def detect_or_return_origin(img_path, model):
     img = cv2.imread(img_path)
-    new_img = model.get_input(img, do_flip=True)
+    new_img = model.get_input(img, threshold=0.02)
 
     if new_img is None:
         return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)), False
@@ -121,7 +121,7 @@ if __name__ == '__main__':
         os.makedirs(vis_probe_0, exist_ok=True)
         vis_gallery_1 = 'vis/gallery/1'
         os.makedirs(vis_gallery_1, exist_ok=True)
-        vis_gallery_1 = 'vis/gallery/0'
+        vis_gallery_0 = 'vis/gallery/0'
         os.makedirs(vis_gallery_0, exist_ok=True)
 
     detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=True)
