@@ -22,6 +22,9 @@ import VGG_FACE
 import adabound
 from VGG_FACE import load_weights
 from metrics import *
+import collections
+import csv
+from PIL import Image
 
 class TripletNetwork(nn.Module):
     def __init__(self,num_class):
@@ -174,7 +177,7 @@ def test(net,testpath):
     for item in readerProbe:
         img0_path = img_dir + item[1]
         img0 = Image.open(img0_path).convert("RGB")
-        img0 = data_transforms(img0)
+        img0 = data_transforms['val'](img0)
         with torch.no_grad():
             img0 = Variable(img0.unsqueeze(0)).cuda()
         probefeature = net(img0,img0,img0)[0]
@@ -186,7 +189,7 @@ def test(net,testpath):
     for item in readerGallery:
         img1_path = img_dir + item[1]
         img1 = Image.open(img1_path).convert("RGB")
-        img1 = data_transforms(img1)
+        img1 = data_transforms['val'](img1)
         with torch.no_grad():
             img1 = Variable(img1.unsqueeze(0)).cuda()
         galleryfeature = net(img1,img1,img1)[0]
@@ -207,7 +210,7 @@ def test(net,testpath):
             k += 1
     auc = k / len(metric)
     print('accuracy:{}'.format(auc))
-    return acc
+    return auc
 
 data_transforms = {
     'train': transforms.Compose([
@@ -224,6 +227,7 @@ data_transforms = {
         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
     ]),
 }
+
 import argparse
 parser = argparse.ArgumentParser(description='Triplet')
 parser.add_argument('--resume', dest='resume',help='resume', type=str, default=None)
