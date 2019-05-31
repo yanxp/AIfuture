@@ -6,15 +6,15 @@ import mxnet.autograd as ag
 import numpy as np
 from rcnn.config import config
 from rcnn.PY_OP import rpn_fpn_ohem3
-from symbol_common import get_sym_train
+from .symbol_common import get_sym_train
 
 
 def conv_only(from_layer, name, num_filter, kernel=(1,1), pad=(0,0), \
     stride=(1,1), bias_wd_mult=0.0, shared_weight=None, shared_bias = None):
   if shared_weight is None:
-    weight = mx.symbol.Variable(name="{}_weight".format(name),   
+    weight = mx.symbol.Variable(name="{}_weight".format(name),
         init=mx.init.Normal(0.01), attr={'__lr_mult__': '1.0'})
-    bias = mx.symbol.Variable(name="{}_bias".format(name),   
+    bias = mx.symbol.Variable(name="{}_bias".format(name),
         init=mx.init.Constant(0.0), attr={'__lr_mult__': '2.0', '__wd_mult__': str(bias_wd_mult)})
   else:
     weight = shared_weight
@@ -27,9 +27,9 @@ def conv_only(from_layer, name, num_filter, kernel=(1,1), pad=(0,0), \
 def conv_act_layer_dw(from_layer, name, num_filter, kernel=(1,1), pad=(0,0), \
     stride=(1,1), act_type="relu", bias_wd_mult=0.0):
     assert kernel[0]==3
-    weight = mx.symbol.Variable(name="{}_weight".format(name),   
+    weight = mx.symbol.Variable(name="{}_weight".format(name),
         init=mx.init.Normal(0.01), attr={'__lr_mult__': '1.0'})
-    bias = mx.symbol.Variable(name="{}_bias".format(name),   
+    bias = mx.symbol.Variable(name="{}_bias".format(name),
         init=mx.init.Constant(0.0), attr={'__lr_mult__': '2.0', '__wd_mult__': str(bias_wd_mult)})
     conv = mx.symbol.Convolution(data=from_layer, kernel=kernel, pad=pad, \
         stride=stride, num_filter=num_filter, num_group=num_filter, name="{}".format(name), weight=weight, bias=bias)
@@ -48,9 +48,9 @@ def conv_act_layer(from_layer, name, num_filter, kernel=(1,1), pad=(0,0), \
     if separable:
       assert kernel[0]==3
     if not separable:
-      weight = mx.symbol.Variable(name="{}_weight".format(name),   
+      weight = mx.symbol.Variable(name="{}_weight".format(name),
           init=mx.init.Normal(0.01), attr={'__lr_mult__': '1.0'})
-      bias = mx.symbol.Variable(name="{}_bias".format(name),   
+      bias = mx.symbol.Variable(name="{}_bias".format(name),
           init=mx.init.Constant(0.0), attr={'__lr_mult__': '2.0', '__wd_mult__': str(bias_wd_mult)})
       conv = mx.symbol.Convolution(data=from_layer, kernel=kernel, pad=pad, \
           stride=stride, num_filter=num_filter, name="{}".format(name), weight=weight, bias=bias)
@@ -456,15 +456,15 @@ def get_mnet_train(sym):
     #if config.SHARE_WEIGHT_BBOX:
     #  assert config.USE_MAXOUT==0
     #  _name = 'face_rpn_cls_score_share'
-    #  shared_weight = mx.symbol.Variable(name="{}_weight".format(_name),   
+    #  shared_weight = mx.symbol.Variable(name="{}_weight".format(_name),
     #      init=mx.init.Normal(0.01), attr={'__lr_mult__': '1.0'})
-    #  shared_bias = mx.symbol.Variable(name="{}_bias".format(_name),   
+    #  shared_bias = mx.symbol.Variable(name="{}_bias".format(_name),
     #      init=mx.init.Constant(0.0), attr={'__lr_mult__': '2.0', '__wd_mult__': str(0.0)})
     #  shared_vars.append( [shared_weight, shared_bias] )
     #  _name = 'face_rpn_bbox_pred_share'
-    #  shared_weight = mx.symbol.Variable(name="{}_weight".format(_name),   
+    #  shared_weight = mx.symbol.Variable(name="{}_weight".format(_name),
     #      init=mx.init.Normal(0.01), attr={'__lr_mult__': '1.0'})
-    #  shared_bias = mx.symbol.Variable(name="{}_bias".format(_name),   
+    #  shared_bias = mx.symbol.Variable(name="{}_bias".format(_name),
     #      init=mx.init.Constant(0.0), attr={'__lr_mult__': '2.0', '__wd_mult__': str(0.0)})
     #  shared_vars.append( [shared_weight, shared_bias] )
     #else:
@@ -472,9 +472,9 @@ def get_mnet_train(sym):
     #  shared_vars.append( [None, None] )
     #if config.SHARE_WEIGHT_LANDMARK:
     #  _name = 'face_rpn_landmark_pred_share'
-    #  shared_weight = mx.symbol.Variable(name="{}_weight".format(_name),   
+    #  shared_weight = mx.symbol.Variable(name="{}_weight".format(_name),
     #      init=mx.init.Normal(0.01), attr={'__lr_mult__': '1.0'})
-    #  shared_bias = mx.symbol.Variable(name="{}_bias".format(_name),   
+    #  shared_bias = mx.symbol.Variable(name="{}_bias".format(_name),
     #      init=mx.init.Constant(0.0), attr={'__lr_mult__': '2.0', '__wd_mult__': str(0.0)})
     #  shared_vars.append( [shared_weight, shared_bias] )
     #else:

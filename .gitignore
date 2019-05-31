@@ -3,3 +3,7 @@ __pycache__/
 
 *.csv
 *.so
+ 
+images/
+label.txt
+cache/

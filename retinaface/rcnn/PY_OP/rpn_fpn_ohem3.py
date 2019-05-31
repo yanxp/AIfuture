@@ -43,7 +43,7 @@ class RPNFPNOHEM3Operator(mx.operator.CustomOp):
         #print('bbox_weight 0', bbox_weight.shape, file=sys.stderr)
         #bbox_weight = np.zeros( (labels_raw.shape[0], labels_raw.shape[1], 4), dtype=np.float32)
         _stat = [0,0,0]
-        for ibatch in xrange(labels_raw.shape[0]):
+        for ibatch in range(labels_raw.shape[0]):
           _anchor_weight = np.zeros( (labels_raw.shape[1],1), dtype=np.float32)
           labels = labels_raw[ibatch]
           fg_score = cls_score[ibatch,1,:] - cls_score[ibatch,0,:]

@@ -91,7 +91,6 @@ def train_net(args, ctx, pretrained, epoch, prefix, begin_epoch, end_epoch,
         #    print('init %s with zero'%(_k))
 
     sym = eval('get_' + args.network + '_train')(sym)
-    #print(sym.get_internals())
     feat_sym = []
     for stride in config.RPN_FEAT_STRIDE:
         feat_sym.append(sym.get_internals()['face_rpn_cls_score_stride%s_output' % stride])
@@ -118,13 +117,13 @@ def train_net(args, ctx, pretrained, epoch, prefix, begin_epoch, end_epoch,
     logger.info('output shape %s' % pprint.pformat(out_shape_dict))
 
 
-    for k,v in arg_shape_dict.iteritems():
+    for k,v in arg_shape_dict.items():
       if k.find('upsampling')>=0:
         print('initializing upsampling_weight', k)
         arg_params[k] = mx.nd.zeros(shape=v)
         init = mx.init.Initializer()
         init._init_bilinear(k, arg_params[k])
-            #print(args[k])
+        #print(args[k])
 
     # check parameter shapes
     #for k in sym.list_arguments():
@@ -181,7 +180,7 @@ def train_net(args, ctx, pretrained, epoch, prefix, begin_epoch, end_epoch,
     # callback
     #means = np.tile(np.array(config.TRAIN.BBOX_MEANS), config.NUM_CLASSES)
     #stds = np.tile(np.array(config.TRAIN.BBOX_STDS), config.NUM_CLASSES)
-    #epoch_end_callback = callback.do_checkpoint(prefix, means, stds)
+    #epoch_end_callback = callback.do_checkpoint(prefix)
     epoch_end_callback = None
     # decide learning rate
     #base_lr = lr
@@ -269,6 +268,9 @@ def train_net(args, ctx, pretrained, epoch, prefix, begin_epoch, end_epoch,
         #mx.model.save_checkpoint(prefix, 99, mod.symbol, arg, aux)
         sys.exit(0)
 
+    if args.checkpoint is not None:
+        _, arg_params, aux_params = mx.model.load_checkpoint(args.checkpoint, 0)
+
     # train
     mod.fit(train_data, eval_metric=eval_metrics, epoch_end_callback=epoch_end_callback,
             batch_end_callback=_batch_callback, kvstore=args.kvstore,
@@ -304,6 +306,7 @@ def parse_args():
     parser.add_argument('--lr', help='base learning rate', default=default.lr, type=float)
     parser.add_argument('--lr_step', help='learning rate steps (in epoch)', default=default.lr_step, type=str)
     parser.add_argument('--no_ohem', help='disable online hard mining', action='store_true')
+    parser.add_argument('--checkpoint', help='checkpoint', default=None, type=str)
     args = parser.parse_args()
     return args
 
@@ -315,7 +318,7 @@ def main():
     ctx = []
     cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
     if len(cvd)>0:
-      for i in xrange(len(cvd.split(','))):
+      for i in range(len(cvd.split(','))):
         ctx.append(mx.gpu(i))
     if len(ctx)==0:
       ctx = [mx.cpu()]
