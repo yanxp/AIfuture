@@ -406,18 +406,18 @@ def get_out(conv_fpn_feat, prefix, stride, landmark=False, lr_mult=1.0):
     return ret_group
 
 def get_resnet_train(sym):
-    return get_sym_train(sym)
-    #data = mx.symbol.Variable(name="data")
-    ## shared convolutional layers
-    #conv_fpn_feat, conv_fpn_feat2 = get_resnet_conv(data, sym)
-    #ret_group = []
-    #for stride in config.RPN_FEAT_STRIDE:
-    #  ret = get_out(conv_fpn_feat, 'face', stride, config.FACE_LANDMARK, lr_mult=1.0)
-    #  ret_group += ret
-    #  if config.HEAD_BOX:
-    #    ret = get_out(conv_fpn_feat2, 'head', stride, False, lr_mult=1.0)
-    #    ret_group += ret
+    #return get_sym_train(sym)
+    data = mx.symbol.Variable(name="data")
+    # shared convolutional layers
+    conv_fpn_feat, conv_fpn_feat2 = get_resnet_conv(data, sym)
+    ret_group = []
+    for stride in config.RPN_FEAT_STRIDE:
+      ret = get_out(conv_fpn_feat, 'face', stride, config.FACE_LANDMARK, lr_mult=1.0)
+      ret_group += ret
+      if config.HEAD_BOX:
+        ret = get_out(conv_fpn_feat2, 'head', stride, False, lr_mult=1.0)
+        ret_group += ret
 
-    #return mx.sym.Group(ret_group)
+    return mx.sym.Group(ret_group)
 
 

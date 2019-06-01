@@ -15,6 +15,7 @@ config.PRE_SCALES = [(1200, 1600)]  # first is scale (the shorter side); second 
 config.SCALES = [(640, 640)]  # first is scale (the shorter side); second is max size
 #config.SCALES = [(800, 800)]  # first is scale (the shorter side); second is max size
 config.ORIGIN_SCALE = False
+config.FBN = False
 
 _ratio = (1.,)
 
@@ -54,7 +55,7 @@ for _stride in [4, 8, 16, 32, 64]:
   RAC_RETINA[key] = value
 
 
-config.RPN_ANCHOR_CFG = RAC_SSH #default
+config.RPN_ANCHOR_CFG = RAC_SSH
 
 config.NET_MODE = 2
 config.HEAD_MODULE = 'SSH'
@@ -65,14 +66,14 @@ config.HEAD_FILTER_NUM = 512
 config.CONTEXT_FILTER_RATIO = 1
 config.max_feat_channel = 9999
 
-config.USE_CROP = True
+config.USE_CROP = False #True
 config.USE_DCN = 0
-config.FACE_LANDMARK = False # True
+config.FACE_LANDMARK = False #True
 config.USE_OCCLUSION = False
 config.USE_BLUR = False
 config.MORE_SMALL_BOX = True
 
-config.LAYER_FIX = True # False
+config.LAYER_FIX = False
 
 config.HEAD_BOX = False
 config.DENSE_ANCHOR = False
@@ -103,11 +104,11 @@ config.TRAIN.BATCH_IMAGES = 8
 # e2e changes behavior of anchor loader and metric
 config.TRAIN.END2END = True
 # group images with similar aspect ratio
-config.TRAIN.ASPECT_GROUPING = False
+config.TRAIN.ASPECT_GROUPING = True #False
 
 # RPN anchor loader
 # rpn anchors batch size
-config.TRAIN.RPN_ENABLE_OHEM = 2
+config.TRAIN.RPN_ENABLE_OHEM = 1
 config.TRAIN.RPN_BATCH_SIZE = 256
 # rpn anchors sampling params
 config.TRAIN.RPN_FG_FRACTION = 0.25
@@ -213,11 +214,11 @@ network.resnet.FIXED_PARAMS = ['^stage1', '^.*upsampling']
 network.resnet.BATCH_IMAGES = 8
 network.resnet.HEAD_FILTER_NUM = 512
 network.resnet.CONTEXT_FILTER_RATIO = 1
-network.resnet.USE_DCN = 2
 network.resnet.RPN_BATCH_SIZE = 256
 
 network.resnet.USE_DCN = 0
 network.resnet.RPN_ANCHOR_CFG = RAC_SSH
+#network.resnet.USE_DCN = 2
 #network.resnet.RPN_ANCHOR_CFG = RAC_RETINA
 
 # dataset settings
@@ -263,7 +264,7 @@ default.frequent = 20
 default.kvstore = 'device'
 # default e2e
 default.prefix = 'model/retinaface'
-default.end_epoch = 50 # 10000
+default.end_epoch = 10000
 default.lr_step = '55,68,80'
 default.lr = 0.01
 

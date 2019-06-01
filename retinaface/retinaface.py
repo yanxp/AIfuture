@@ -112,6 +112,7 @@ class RetinaFace:
     self._num_anchors = dict(zip(self.fpn_keys, [anchors.shape[0] for anchors in self._anchors_fpn.values()]))
     #self._bbox_pred = nonlinear_pred
     #self._landmark_pred = landmark_pred
+    #sym, arg_params, aux_params = mx.model.load_checkpoint('./models/R50', 0)
     sym, arg_params, aux_params = mx.model.load_checkpoint(prefix, epoch)
     if self.ctx_id>=0:
       self.ctx = mx.gpu(self.ctx_id)

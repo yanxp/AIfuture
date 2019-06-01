@@ -1,7 +1,7 @@
 import os
 import numpy as np
 # img_dir = '/home/yanxiaopeng/codework/dataset/af2019-ksyun-training-20190416/images/'
-anno_dir = '/home/yanxiaopeng/codework/dataset/annotations'
+anno_dir = '/home/chenriquan/aifuture/annotations'
 
 boxes = []
 fnames = []
@@ -45,7 +45,7 @@ with open('label.txt', 'w') as f:
     for path, box in zip(fnames, boxes):
         s = '# ' + path + '\n'
         f.write(s)
-        s = '{:.1f} {:.1f} {:.1f} {:.1f} '.format(box[0], box[1], box[2], box[3])
+        s = '{:.1f} {:.1f} {:.1f} {:.1f} '.format(box[0], box[1], box[2]-box[0], box[3]-box[1])
         s += ' '.join(['-1'] * 16)
         f.write(s)
         f.write('\n')

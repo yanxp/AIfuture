@@ -100,6 +100,9 @@ class retinaface(IMDB):
                     continue
 
                 boxes[ix, :] = np.array([x1, y1, x2, y2], np.float)
+                #tmp = cv2.imread(os.path.join(self._imgs_path, fp))
+                #cv2.rectangle(tmp, (int(x1),int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                #cv2.imwrite('test.png',tmp)
                 if self._split=='train':
                   landmark = np.array( values[4:19], dtype=np.float32 ).reshape((5,3))
                   for li in range(5):

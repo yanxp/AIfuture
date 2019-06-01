@@ -31,10 +31,7 @@ unset __conda_setup
 
 # <<< conda init <<<
 
-conda activate afteam_911
-
-conda env update -f environment.yaml
-pip install --upgrade -r requirements.txt
+conda activate afteam_911 && conda env update -f environment.yaml && pip install --upgrade -r requirements.txt
 
 cd retinaface
 make

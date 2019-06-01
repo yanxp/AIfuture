@@ -1,5 +1,7 @@
 models/*
+/**/model/*
 __pycache__/
+vis/
 
 *.csv
 *.so
@@ -7,3 +9,4 @@ __pycache__/
 images/
 label.txt
 cache/
+*.png

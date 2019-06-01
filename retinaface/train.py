@@ -41,6 +41,43 @@ def get_fixed_params(symbol, fixed_param):
       idx+=1
     return fixed_param_names
 
+def checkpoint_callback(prefix, period=1):
+    period = int(max(1, period))
+    def _callback(iter_no, sym, arg, aux):
+      """The checkpoint function."""
+      if (iter_no + 1) % period != 0:
+        return
+      
+      all_layers = sym.get_internals()
+      outs = []
+      for stride in config.RPN_FEAT_STRIDE:
+        num_anchors = config.RPN_ANCHOR_CFG[str(stride)]['NUM_ANCHORS']
+        _name = 'face_rpn_cls_score_stride%d_output' % stride
+        rpn_cls_score = all_layers[_name]
+
+
+        # prepare rpn data
+        rpn_cls_score_reshape = mx.symbol.Reshape(data=rpn_cls_score,
+                                                  shape=(0, 2, -1, 0),
+                                                  name="face_rpn_cls_score_reshape_stride%d" % stride)
+
+        rpn_cls_prob = mx.symbol.SoftmaxActivation(data=rpn_cls_score_reshape,
+                                                   mode="channel",
+                                                   name="face_rpn_cls_prob_stride%d" % stride)
+        rpn_cls_prob_reshape = mx.symbol.Reshape(data=rpn_cls_prob,
+                                                 shape=(0, 2 * num_anchors, -1, 0),
+                                                 name='face_rpn_cls_prob_reshape_stride%d' % stride)
+        _name = 'face_rpn_bbox_pred_stride%d_output' % stride
+        rpn_bbox_pred = all_layers[_name]
+        outs.append(rpn_cls_prob_reshape)
+        outs.append(rpn_bbox_pred)
+        if config.FACE_LANDMARK:
+          _name = 'face_rpn_landmark_pred_stride%d_output' % stride
+          rpn_landmark_pred = all_layers[_name]
+          outs.append(rpn_landmark_pred)
+      _sym = mx.sym.Group(outs)
+      mx.model.save_checkpoint(prefix, iter_no+1, _sym, arg, aux)
+    return _callback
 def train_net(args, ctx, pretrained, epoch, prefix, begin_epoch, end_epoch,
               lr=0.001, lr_step='5'):
     # setup config
@@ -272,11 +309,10 @@ def train_net(args, ctx, pretrained, epoch, prefix, begin_epoch, end_epoch,
         _, arg_params, aux_params = mx.model.load_checkpoint(args.checkpoint, 0)
 
     # train
-    mod.fit(train_data, eval_metric=eval_metrics, epoch_end_callback=epoch_end_callback,
+    mod.fit(train_data, eval_metric=eval_metrics, epoch_end_callback=checkpoint_callback('model/testR50'),
             batch_end_callback=_batch_callback, kvstore=args.kvstore,
             optimizer=opt,
             initializer = initializer,
-            allow_missing=True,
             arg_params=arg_params, aux_params=aux_params, begin_epoch=begin_epoch, num_epoch=end_epoch)
 
 

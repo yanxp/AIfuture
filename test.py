@@ -25,7 +25,7 @@ def parse_args():
     # RetinaNet: prefix, epoch, ctx_id=0, network='net3', nms=0.4, nocrop=False, decay4 = 0.5, vote=False
     parser.add_argument('--pretrained-detector', dest="pdetect",
                         help="detector checkpoint prefix", default="./models/R50")
-    parser.add_argument('--detector-epoch', dest='depoch', default=0)
+    parser.add_argument('--detector-epoch', dest='depoch', default=0, type=int)
     parser.add_argument('--detector-network', dest="dnet",
                         help="detector config type", default='net3')
     parser.add_argument('--nms', type=float, default=0.4)
