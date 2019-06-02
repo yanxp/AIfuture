@@ -33,7 +33,7 @@ facescrub_out = '/raid5data/dplearn/megaface/FaceScrub_Features'
 
 
 def do_flip(data):
-  for idx in xrange(data.shape[0]):
+  for idx in range(data.shape[0]):
     data[idx,:,:] = np.fliplr(data[idx,:,:])
 
 def get_feature(image_path, bbox, landmark, nets, image_shape, use_align, aligned, use_mean):

@@ -22,6 +22,8 @@ def parse_args():
     parser.add_argument('--prediction-file', dest='ppath',
                         help='prediction file path', type=str)
     parser.add_argument('--vis', action="store_true")
+    parser.add_argument('--save_crop', action="store_true")
+    parser.add_argument('--crop_dir', default="../rf-finalA-cropped")
     # RetinaNet: prefix, epoch, ctx_id=0, network='net3', nms=0.4, nocrop=False, decay4 = 0.5, vote=False
     parser.add_argument('--pretrained-detector', dest="pdetect",
                         help="detector checkpoint prefix", default="./models/R50")
@@ -126,6 +128,7 @@ if __name__ == '__main__':
 
     detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=True)
 
+
     probeFile = open(probe, "r")
     readerProbe = csv.reader(probeFile)
     for _, item in readerProbe:
@@ -137,6 +140,9 @@ if __name__ == '__main__':
                 img0.save(os.path.join(vis_probe_1, item[-10:]))
             else:
                 img0.save(os.path.join(vis_probe_0, item[-10:]))
+        if args.save_crop:
+            os.makedirs(os.path.join(args.crop_dir,'images',os.path.dirname(item)), exist_ok=True)
+            img0.save(os.path.join(args.crop_dir, 'images', item))
     probeFile.close()
 
     galleryFile = open(gallery, "r")
@@ -150,6 +156,9 @@ if __name__ == '__main__':
                 img1.save(os.path.join(vis_gallery_1, item[-10:]))
             else:
                 img1.save(os.path.join(vis_gallery_0, item[-10:]))
+        if args.save_crop:
+            os.makedirs(os.path.join(args.crop_dir,'images',os.path.dirname(item)), exist_ok=True)
+            img1.save(os.path.join(args.crop_dir, 'images', item))
     galleryFile.close()
 
     del detector

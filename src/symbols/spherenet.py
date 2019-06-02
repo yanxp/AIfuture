@@ -5,7 +5,7 @@ from mxnet.base import _Null
 
 def conv_main(data, units, filters, workspace):
   body = data
-  for i in xrange(len(units)):
+  for i in range(len(units)):
     f = filters[i]
     _weight = mx.symbol.Variable("conv%d_%d_weight"%(i+1, 1), init=mx.init.Normal(0.01))
     _bias = mx.symbol.Variable("conv%d_%d_bias"%(i+1, 1), lr_mult=2.0, wd_mult=0.0, init=mx.init.Constant(0.0))
@@ -14,7 +14,7 @@ def conv_main(data, units, filters, workspace):
 
     body = mx.sym.LeakyReLU(data = body, act_type='prelu', name = "relu%d_%d" % (i+1, 1))
     idx = 2
-    for j in xrange(units[i]):
+    for j in range(units[i]):
       _weight = mx.symbol.Variable("conv%d_%d_weight"%(i+1, idx), init=mx.init.Normal(0.01))
       _body = mx.sym.Convolution(data=body, weight=_weight, no_bias=True, num_filter=f, kernel=(3, 3), stride=(1,1), pad=(1, 1),
                                 name= "conv%d_%d"%(i+1, idx), workspace=workspace)

@@ -31,7 +31,7 @@ def conv_block(input, groups, filters, ksizes, strides=None, with_pool=True):
     w_attr = ParamAttr(learning_rate=1., initializer=Xavier())
     b_attr = ParamAttr(learning_rate=2., regularizer=L2Decay(0.))
     conv = input
-    for i in six.moves.xrange(groups):
+    for i in six.moves.range(groups):
         conv = fluid.layers.conv2d(
             input=conv,
             num_filters=filters[i],

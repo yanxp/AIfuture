@@ -2,7 +2,7 @@ import sys
 import os
 from easydict import EasyDict as edict
 
-input_dir = '/raid5data/dplearn/YTF/aligned_images_DB'
+input_dir = sys.argv[1]
 ret = []
 label = 0
 person_names = []

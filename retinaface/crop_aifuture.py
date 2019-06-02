@@ -23,6 +23,7 @@ def parse_args():
     parser.add_argument('--output', help='output folder', default='/home/chenriquan/aifuture/rf-cropped-training', type=str)
     parser.add_argument('--nms', type=float, default=0.4)
     parser.add_argument('--nocrop', action="store_true")
+    parser.add_argument('--image_size', type=int, default=224, help="output image size")
     args = parser.parse_args()
     return args
 
@@ -42,7 +43,7 @@ def test(args):
   if not os.path.exists(output_root):
     os.makedirs(output_root, exist_ok=True)
   detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=True)
-
+  remain_path = []
   for cls in os.listdir(args.data_rpath):
     for domain in ['0', '1']:
       path = os.path.join(args.data_rpath, cls, domain)
@@ -56,14 +57,19 @@ def test(args):
         tmp = os.path.join(tmp, imgn)
         if new_img is None:
           not_detected += 1
+          remain_path.append(tmp)
           cv2.imwrite(tmp, img)
         else:
-          cv2.imwrite(tmp, new_img)
+          new_img = cv2.resize(new_img, (args.image_size, args.image_size))
+          cv2.imwrite(tmp, cv2.cvtColor(new_img, cv2.COLOR_RGB2BGR))
         print('save in ', tmp)
         all_img_num += 1
   
   print('all_img_num: {}, not detected: {}, proportion: {:.3f}'.format(all_img_num, not_detected, not_detected/all_img_num))
 
+  with open(os.path.join(args.output, 'not_detected.txt'), 'w') as f:
+    f.write('\n'.join(remain_path))
+    
 def main():
     global args
     args = parse_args()

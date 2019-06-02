@@ -23,7 +23,7 @@ def do_clean(args):
   ctx = []
   cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
   if len(cvd)>0:
-    for i in xrange(len(cvd.split(','))):
+    for i in range(len(cvd.split(','))):
       ctx.append(mx.gpu(i))
   if len(ctx)==0:
     ctx = [mx.cpu()]
@@ -72,7 +72,7 @@ def do_clean(args):
       print('stat', nrof_images, nrof_removed)
     _list = range(*v)
     ocontents = []
-    for i in xrange(len(_list)):
+    for i in range(len(_list)):
       _idx = _list[i]
       s = imgrec.read_idx(_idx)
       ocontents.append(s)
@@ -92,7 +92,7 @@ def do_clean(args):
       label = nd.zeros( (_batch_size2,) )
       count = bb-ba
       ii=0
-      for i in xrange(ba, bb):
+      for i in range(ba, bb):
         header, img = mx.recordio.unpack(ocontents[i])
         img = mx.image.imdecode(img)
         img = nd.transpose(img, axes=(2, 0, 1))
@@ -121,7 +121,7 @@ def do_clean(args):
       sim = sim.flatten()
       #print(sim.flatten())
       x = np.argsort(sim)
-      for ix in xrange(len(x)):
+      for ix in range(len(x)):
         _idx = x[ix]
         _sim = sim[_idx]
         #if ix<int(len(x)*0.3) and _sim<args.threshold:
@@ -132,14 +132,14 @@ def do_clean(args):
       y_pred = DBSCAN(eps = args.threshold, min_samples = 2).fit_predict(embeddings)
       #print(y_pred)
       gmap = {}
-      for _idx in xrange(embeddings.shape[0]):
+      for _idx in range(embeddings.shape[0]):
         label = int(y_pred[_idx])
         if label not in gmap:
           gmap[label] = []
         gmap[label].append(_idx)
       assert len(gmap)>0
       _max = [0, 0]
-      for label in xrange(10):
+      for label in range(10):
         if not label in gmap:
           break
         glist = gmap[label]

@@ -84,7 +84,7 @@ for part in [ ('CFP_frontal_paris.mat', 'cfp_ff'), ('CFP_profile_paris.mat', 'cf
   issame_list = []
   nrof = [0, 0, 0]
   print('processing', part[1], pairs.shape[1])
-  for i in xrange(pairs.shape[1]):
+  for i in range(pairs.shape[1]):
     if i%10==0:
       print('processing', i, nrof)
     pair = pairs[0][i]

@@ -31,7 +31,7 @@ def ch_dev(arg_params, aux_params, ctx):
   return new_args, new_auxs
 
 def do_flip(data):
-  for idx in xrange(data.shape[0]):
+  for idx in range(data.shape[0]):
     data[idx,:,:] = np.fliplr(data[idx,:,:])
 
 class FaceModel:
@@ -107,7 +107,7 @@ class FaceModel:
     str_image_size = "%d,%d"%(self.image_size[0], self.image_size[1])
     bounding_boxes, points = detect_face.detect_face(img, self.det_minsize, self.pnet, self.rnet, self.onet, self.det_threshold, self.det_factor)
     ret = []
-    for i in xrange(bounding_boxes.shape[0]):
+    for i in range(bounding_boxes.shape[0]):
       bbox = bounding_boxes[i,0:4]
       landmark = points[:, i].reshape((2,5)).T
       aligned = face_preprocess.preprocess(img, bbox=bbox, landmark = landmark, image_size=str_image_size)

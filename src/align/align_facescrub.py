@@ -208,7 +208,7 @@ def main(args):
                     det = bounding_boxes[:,0:4]
                     bindex = -1
                     index2 = [0.0, 0]
-                    for i in xrange(det.shape[0]):
+                    for i in range(det.shape[0]):
                       _det = det[i]
                       iou = IOU(fimage.bbox, _det)
                       if iou>index2[0]:
