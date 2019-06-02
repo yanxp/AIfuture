@@ -8,19 +8,19 @@ import numpy as np
 import mxnet as mx
 from mxnet import ndarray as nd
 import cv2
-from rcnn.logger import logger
-from retinaface import RetinaFace
+from .rcnn.logger import logger
+from .retinaface import RetinaFace
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test widerface by retinaface detector')
     # general
     parser.add_argument('--network', help='network name', default='net3', type=str)
-    parser.add_argument('--data_rpath', help='dataset name', default='retinaface', type=str)
+    parser.add_argument('--data_rpath', help='dataset name', default='', type=str)
     # testing
     parser.add_argument('--prefix', help='model to test with', default='', type=str)
-    parser.add_argument('--epoch', help='model to test with', default=0, type=int)
-    parser.add_argument('--output', help='output folder', default='rf-cropped-training', type=str)
+    parser.add_argument('--epoch', help='model to test with', default=4, type=int)
+    parser.add_argument('--output', help='output folder', default='/home/chenriquan/aifuture/rf-cropped-training', type=str)
     parser.add_argument('--nms', type=float, default=0.4)
     parser.add_argument('--nocrop', action="store_true")
     args = parser.parse_args()
@@ -30,10 +30,14 @@ detector = None
 args = None
 all_img_num = 0
 not_detected = 0
+os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT']='0'
 
 def test(args):
   print('test with', args)
   global detector
+  global all_img_num
+  global not_detected
+
   output_root = os.path.join(args.output, 'images')
   if not os.path.exists(output_root):
     os.makedirs(output_root, exist_ok=True)
@@ -46,15 +50,19 @@ def test(args):
         imgp = os.path.join(path, imgn)
         img = cv2.imread(imgp)
         new_img = detector.get_input(img, threshold=0.02)
+
+        tmp = os.path.join(output_root, cls, domain)
+        os.makedirs(tmp, exist_ok=True)
+        tmp = os.path.join(tmp, imgn)
         if new_img is None:
           not_detected += 1
-          img.imwrite(os.path.join(output_root, cls, domain, imgn))
+          cv2.imwrite(tmp, img)
         else:
-          new_img.imwrite(os.path.join(output_root, cls, domain, imgn))
-
+          cv2.imwrite(tmp, new_img)
+        print('save in ', tmp)
         all_img_num += 1
   
-  print('all_img_num: {}, not detected: {}, proportion: {:.3f}'.format(all_img_num, not_detected, all_img_num/not_detected))
+  print('all_img_num: {}, not detected: {}, proportion: {:.3f}'.format(all_img_num, not_detected, not_detected/all_img_num))
 
 def main():
     global args
