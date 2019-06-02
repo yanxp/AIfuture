@@ -34,7 +34,7 @@ def get_img(name, vid):
   assert len(paths)>=parts
   gap = len(paths)//parts
   img = None
-  for i in xrange(parts):
+  for i in range(parts):
     idx = gap*i
     path = paths[idx]
     _img = cv2.imread(path)

@@ -62,10 +62,10 @@ def demo_maskrcnn(network, ctx, prefix, epoch,
 
     #CLASSES  = ('__background__', 'person', 'rider', 'car', 'truck', 'bus', 'train', 'mcycle', 'bicycle')
     #CLASSES  = ('__background__', 'text')
-    #all_boxes = [[[] for _ in xrange(1)]
-    #             for _ in xrange(len(CLASSES))]
-    #all_masks = [[[] for _ in xrange(1)]
-    #             for _ in xrange(len(CLASSES))]
+    #all_boxes = [[[] for _ in range(1)]
+    #             for _ in range(len(CLASSES))]
+    #all_masks = [[[] for _ in range(1)]
+    #             for _ in range(len(CLASSES))]
     #label = np.argmax(scores, axis=1)
     #label = label[:, np.newaxis]
 
@@ -177,10 +177,10 @@ def demo_maskrcnn(network, ctx, prefix, epoch,
 
         CLASSES  = ('__background__', 'text')
 
-        all_boxes = [[[] for _ in xrange(1)]
-                     for _ in xrange(len(CLASSES))]
-        all_masks = [[[] for _ in xrange(1)]
-                     for _ in xrange(len(CLASSES))]
+        all_boxes = [[[] for _ in range(1)]
+                     for _ in range(len(CLASSES))]
+        all_masks = [[[] for _ in range(1)]
+                     for _ in range(len(CLASSES))]
         label = np.argmax(scores, axis=1)
         label = label[:, np.newaxis]
 

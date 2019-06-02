@@ -34,7 +34,7 @@ def get_embedding(args, imgrec, id, image_size, model):
   s = imgrec.read_idx(id)
   header, _ = mx.recordio.unpack(s)
   ocontents = []
-  for idx in xrange(int(header.label[0]), int(header.label[1])):
+  for idx in range(int(header.label[0]), int(header.label[1])):
     #print('idx', idx)
     s = imgrec.read_idx(idx)
     ocontents.append(s)
@@ -51,7 +51,7 @@ def get_embedding(args, imgrec, id, image_size, model):
     #label = nd.zeros( (_batch_size2,) )
     count = bb-ba
     ii=0
-    for i in xrange(ba, bb):
+    for i in range(ba, bb):
       header, img = mx.recordio.unpack(ocontents[i])
       #print(header.label.shape, header.label)
       img = mx.image.imdecode(img)
@@ -87,7 +87,7 @@ def main(args):
     ctx = []
     cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
     if len(cvd)>0:
-      for i in xrange(len(cvd.split(','))):
+      for i in range(len(cvd.split(','))):
         ctx.append(mx.gpu(i))
     if len(ctx)==0:
       ctx = [mx.cpu()]
@@ -119,7 +119,7 @@ def main(args):
   id_list_map = {}
   all_id_list = []
   test_limit = 0
-  for ds_id in xrange(len(rec_list)):
+  for ds_id in range(len(rec_list)):
     id_list = []
     imgrec = rec_list[ds_id]
     s = imgrec.read_idx(0)
@@ -153,7 +153,7 @@ def main(args):
       for id_item in all_id_list:
         X.append(id_item[2])
       X = np.array(X)
-      for i in xrange(len(id_list)):
+      for i in range(len(id_list)):
         id_item = id_list[i]
         y = id_item[2]
         sim = np.dot(X, y.T)
@@ -194,7 +194,7 @@ def main(args):
       data_set = verification.load_bin(args.exclude, image_size)[0][0]
       print(data_set.shape)
       data = nd.zeros( (1,3,image_size[0], image_size[1]))
-      for i in xrange(data_set.shape[0]):
+      for i in range(data_set.shape[0]):
         data[0] = data_set[i]
         db = mx.io.DataBatch(data=(data,))
         model.forward(db, is_train=False)
@@ -257,7 +257,7 @@ def main(args):
     header, _ = mx.recordio.unpack(s)
     a, b = int(header.label[0]), int(header.label[1])
     identities.append( (idx, idx+b-a) )
-    for _idx in xrange(a,b):
+    for _idx in range(a,b):
       s = imgrec.read_idx(_idx)
       _header, _content = mx.recordio.unpack(s)
       nheader = mx.recordio.IRHeader(0, nlabel, idx, 0)

@@ -79,8 +79,6 @@ def read_list(path_in):
           item.label = [float(identity[0]), float(identity[1])]
           yield item
 
-
-
 def image_encode(args, i, item, q_out):
     oitem = [item.id]
     #print('flag', item.flag)

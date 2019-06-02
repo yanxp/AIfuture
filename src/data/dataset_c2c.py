@@ -23,7 +23,7 @@ def main(args):
   ctx = []
   cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
   if len(cvd)>0:
-    for i in xrange(len(cvd.split(','))):
+    for i in range(len(cvd.split(','))):
       ctx.append(mx.gpu(i))
   if len(ctx)==0:
     ctx = [mx.cpu()]
@@ -69,7 +69,7 @@ def main(args):
       print('processing id', pp)
     _list = range(*v)
     ocontents = []
-    for i in xrange(len(_list)):
+    for i in range(len(_list)):
       _idx = _list[i]
       #print('_idx', _id, _idx)
       s = imgrec.read_idx(_idx)
@@ -89,7 +89,7 @@ def main(args):
       label = nd.zeros( (_batch_size2,) )
       count = bb-ba
       ii=0
-      for i in xrange(ba, bb):
+      for i in range(ba, bb):
         header, img = mx.recordio.unpack(ocontents[i])
         headers[i] = header
         img = mx.image.imdecode(img)
@@ -117,7 +117,7 @@ def main(args):
     sims = sim.flatten()
     assert len(_list)==len(sims)
     assert len(_list)==len(ocontents)
-    for i in xrange(len(ocontents)):
+    for i in range(len(ocontents)):
       _sim = sims[i]
       _idx = _list[i]
       _header = headers[i]

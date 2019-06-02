@@ -50,7 +50,7 @@ def Circle_Middle(name, data,
                   bn_mom=0.9,
                   round=8):
     b = data
-    for i in xrange(round):
+    for i in range(round):
         residual = b
         prefix = name + '_block' + ('_%d' % i)
 

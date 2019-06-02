@@ -87,12 +87,12 @@ for part in [ ('04_FINAL_protocol_30_years.mat', 'agedb_30') ]:
   nrof = [0, 0, 0]
   print('processing', part[1])
   pp = 0
-  for i in xrange(data.shape[0]):
+  for i in range(data.shape[0]):
     split = data[i][0][0][0][0]
     print(split.shape)
-    for c in xrange(split.shape[1]):
+    for c in range(split.shape[1]):
       last_name = ''
-      for r in xrange(split.shape[0]):
+      for r in range(split.shape[0]):
         pp+=1
         if pp%10==0:
           print('processing', pp, nrof)

@@ -91,7 +91,7 @@ def main(args):
                     age = max(0, min(100, age))
                     #print('age', age)
 
-                    for a in xrange(0, age):
+                    for a in range(0, age):
                         age_label[a] = 1
                     nlabel += age_label
                 elif ds=='imdb':
@@ -102,11 +102,11 @@ def main(args):
                       age_label = [0]*100
                       age = int(_header.label[0])
                       age = max(0, min(100, age))
-                      for a in xrange(0, age):
+                      for a in range(0, age):
                           age_label[a] = 1
                       nlabel = age_label
                     #nlabel += age_label
-                for r in xrange(repeat):
+                for r in range(repeat):
                     nheader = mx.recordio.IRHeader(0, nlabel, widx[0], 0)
                     s = mx.recordio.pack(nheader, _content)
                     writer.write_idx(widx[0], s)
