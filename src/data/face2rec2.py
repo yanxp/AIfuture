@@ -44,8 +44,8 @@ except ImportError:
 def read_list(path_in):
     with open(path_in) as fin:
         identities = []
-        last = [-1, -1]
-        _id = 1
+        last = [-1, -1] # range's [label, start id]
+        _id = 1 # idx == 1
         while True:
             line = fin.readline()
             if not line:
@@ -61,17 +61,17 @@ def read_list(path_in):
             yield item
             if label!=last[0]:
               if last[1]>=0:
-                identities.append( (last[1], _id) )
+                identities.append( (last[1], _id) ) # identity range for last label
               last[0] = label
               last[1] = _id
             _id+=1
         identities.append( (last[1], _id) )
         item = edict()
         item.flag = 2
-        item.id = 0
-        item.label = [float(_id), float(_id+len(identities))]
+        item.id = 0 # idx == 0
+        item.label = [float(_id), float(_id+len(identities))] # image end idx, identity end idx
         yield item
-        for identity in identities:
+        for identity in identities: # record all range
           item = edict()
           item.flag = 2
           item.id = _id

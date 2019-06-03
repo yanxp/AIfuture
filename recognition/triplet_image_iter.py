@@ -21,7 +21,7 @@ from mxnet import ndarray as nd
 #from ._ndarray_internal import _cvcopyMakeBorder as copyMakeBorder
 from mxnet import io
 from mxnet import recordio
-sys.path.append(os.path.join(os.path.dirname(__file__), 'common'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'src', 'common'))
 import face_preprocess
 
 logger = logging.getLogger()
@@ -49,9 +49,9 @@ class FaceImageIter(io.DataIter):
         print('header0 label', header.label)
         self.header0 = (int(header.label[0]), int(header.label[1]))
         #assert(header.flag==1)
-        self.imgidx = range(1, int(header.label[0]))
+        self.imgidx = list(range(1, int(header.label[0])))
         self.id2range = {}
-        self.seq_identity = range(int(header.label[0]), int(header.label[1]))
+        self.seq_identity = list(range(int(header.label[0]), int(header.label[1])))
         for identity in self.seq_identity:
           s = self.imgrec.read_idx(identity)
           header, _ = recordio.unpack(s)
@@ -180,7 +180,7 @@ class FaceImageIter(io.DataIter):
       self.triplet_seq = []
       for _id in ids:
         v = self.id2range[_id]
-        _list = range(*v)
+        _list = list(range(*v))
         random.shuffle(_list)
         if len(_list)>self.images_per_identity:
           _list = _list[0:self.images_per_identity]
@@ -253,17 +253,36 @@ class FaceImageIter(io.DataIter):
           self.mx_model.forward(db, is_train=False)
           net_out = self.mx_model.get_outputs()
           #print('eval for selecting triplets',ba,bb)
-          #print(net_out)
           #print(len(net_out))
           #print(net_out[0].asnumpy())
           net_out = net_out[0].asnumpy()
-          #print(net_out)
+          # print(np.where(np.isnan(net_out)))
           #print('net_out', net_out.shape)
           if embeddings is None:
             embeddings = np.zeros( (bag_size, net_out.shape[1]))
           embeddings[ba:bb,:] = net_out
           ba = bb
         assert len(tag)==bag_size
+        # BUG: first batch is always NaN
+        for i in range(0, batch_size):
+          _idx = self.triplet_seq[i+self.triplet_cur]
+          s = self.imgrec.read_idx(_idx)
+          header, img = recordio.unpack(s)
+          img = self.imdecode(img)
+          data[i][:] = self.postprocess_data(img)
+          _label = header.label
+          if not isinstance(_label, numbers.Number):
+            _label = _label[0]
+          if label is not None:
+            label[i][:] = _label
+
+        db = mx.io.DataBatch(data=(data,))
+        self.mx_model.forward(db, is_train=False)
+        net_out = self.mx_model.get_outputs()
+        net_out = net_out[0].asnumpy()
+        # print(np.where(np.isnan(net_out)))
+        embeddings[:batch_size,:] = net_out
+        # -------------------------- #
         self.triplet_cur+=bag_size
         embeddings = sklearn.preprocessing.normalize(embeddings)
         self.times[1] += self.time_elapsed()

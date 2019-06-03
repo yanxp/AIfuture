@@ -37,27 +37,27 @@ args = None
 
 
 def parse_args():
-  parser = argparse.ArgumentParser(description='Train face network')
-  # general
-  parser.add_argument('--dataset', default=default.dataset, help='dataset config')
-  parser.add_argument('--network', default=default.network, help='network config')
-  parser.add_argument('--loss', default=default.loss, help='loss config')
-  args, rest = parser.parse_known_args()
-  generate_config(args.network, args.dataset, args.loss)
-  parser.add_argument('--models-root', default=default.models_root, help='root directory to save model.')
-  parser.add_argument('--pretrained', default=default.pretrained, help='pretrained model to load')
-  parser.add_argument('--pretrained-epoch', type=int, default=default.pretrained_epoch, help='pretrained epoch to load')
-  parser.add_argument('--ckpt', type=int, default=default.ckpt, help='checkpoint saving option. 0: discard saving. 1: save when necessary. 2: always save')
-  parser.add_argument('--verbose', type=int, default=default.verbose, help='do verification testing and model saving every verbose batches')
-  parser.add_argument('--lr', type=float, default=default.lr, help='start learning rate')
-  parser.add_argument('--lr-steps', type=str, default=default.lr_steps, help='steps of lr changing')
-  parser.add_argument('--wd', type=float, default=default.wd, help='weight decay')
-  parser.add_argument('--mom', type=float, default=default.mom, help='momentum')
-  parser.add_argument('--frequent', type=int, default=default.frequent, help='')
-  parser.add_argument('--per-batch-size', type=int, default=default.per_batch_size, help='batch size in each context')
-  parser.add_argument('--kvstore', type=str, default=default.kvstore, help='kvstore setting')
-  args = parser.parse_args()
-  return args
+    parser = argparse.ArgumentParser(description='Train face network')
+    # general
+    parser.add_argument('--dataset', default=default.dataset, help='dataset config')
+    parser.add_argument('--network', default=default.network, help='network config')
+    parser.add_argument('--loss', default=default.loss, help='loss config')
+    args, rest = parser.parse_known_args()
+    generate_config(args.network, args.dataset, args.loss)
+    parser.add_argument('--models-root', default=default.models_root, help='root directory to save model.')
+    parser.add_argument('--pretrained', default=default.pretrained, help='pretrained model to load')
+    parser.add_argument('--pretrained-epoch', type=int, default=default.pretrained_epoch, help='pretrained epoch to load')
+    parser.add_argument('--ckpt', type=int, default=default.ckpt, help='checkpoint saving option. 0: discard saving. 1: save when necessary. 2: always save')
+    parser.add_argument('--verbose', type=int, default=default.verbose, help='do verification testing and model saving every verbose batches')
+    parser.add_argument('--lr', type=float, default=default.lr, help='start learning rate')
+    parser.add_argument('--lr-steps', type=str, default=default.lr_steps, help='steps of lr changing')
+    parser.add_argument('--wd', type=float, default=default.wd, help='weight decay')
+    parser.add_argument('--mom', type=float, default=default.mom, help='momentum')
+    parser.add_argument('--frequent', type=int, default=default.frequent, help='')
+    parser.add_argument('--per-batch-size', type=int, default=default.per_batch_size, help='batch size in each context')
+    parser.add_argument('--kvstore', type=str, default=default.kvstore, help='kvstore setting')
+    args = parser.parse_args()
+    return args
 
 
 def get_symbol(args):
@@ -247,11 +247,12 @@ def train_net(args):
         metric2 = LossValueMetric()
         eval_metrics.append( mx.metric.create(metric2) )
 
+    model.bind(data_shapes=train_dataiter.provide_data, label_shapes=train_dataiter.provide_label)
+
     if config.net_name=='fresnet' or config.net_name=='fmobilefacenet':
       initializer = mx.init.Xavier(rnd_type='gaussian', factor_type="out", magnitude=2) #resnet style
     else:
       initializer = mx.init.Xavier(rnd_type='uniform', factor_type="in", magnitude=2)
-    #initializer = mx.init.Xavier(rnd_type='gaussian', factor_type="out", magnitude=2) #resnet style
     _rescale = 1.0/args.ctx_num
     opt = optimizer.SGD(learning_rate=args.lr, momentum=args.mom, wd=args.wd, rescale_grad=_rescale)
     _cb = mx.callback.Speedometer(args.batch_size, args.frequent)
@@ -355,7 +356,7 @@ def train_net(args):
 
     model.fit(train_dataiter,
         begin_epoch        = begin_epoch,
-        num_epoch          = 999999,
+        num_epoch          = default.end_epoch,
         eval_data          = val_dataiter,
         eval_metric        = eval_metrics,
         kvstore            = args.kvstore,

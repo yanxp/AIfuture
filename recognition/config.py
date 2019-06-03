@@ -161,18 +161,18 @@ loss.combined.loss_m3 = 0.2
 
 loss.triplet = edict()
 loss.triplet.loss_name = 'triplet'
-loss.triplet.images_per_identity = 5
+loss.triplet.images_per_identity = 6 # 5
 loss.triplet.triplet_alpha = 0.3
-loss.triplet.triplet_bag_size = 7200
+loss.triplet.triplet_bag_size = 4800 # 7200
 loss.triplet.triplet_max_ap = 0.0
-loss.triplet.per_batch_size = 60
+loss.triplet.per_batch_size = 24 # 60
 loss.triplet.lr = 0.05
 
 loss.atriplet = edict()
 loss.atriplet.loss_name = 'atriplet'
-loss.atriplet.images_per_identity = 5
+loss.atriplet.images_per_identity = 6 # 5
 loss.atriplet.triplet_alpha = 0.35
-loss.atriplet.triplet_bag_size = 7200
+loss.atriplet.triplet_bag_size = 4800 #7200
 loss.atriplet.triplet_max_ap = 0.0
 loss.atriplet.per_batch_size = 60
 loss.atriplet.lr = 0.05
@@ -191,12 +191,12 @@ default.frequent = 20
 default.verbose = 2000
 default.kvstore = 'device'
 
-default.end_epoch = 15
+default.end_epoch = 10000 # 15
 default.lr = 0.1
 default.wd = 0.0005
 default.mom = 0.9
-default.per_batch_size = 64 # 128
-default.ckpt = 3
+default.per_batch_size = 24 # 128
+default.ckpt = 1
 default.lr_steps = '100000,160000,220000'
 default.models_root = './models'
 

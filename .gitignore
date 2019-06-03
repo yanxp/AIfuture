@@ -2,6 +2,7 @@ models/*
 /**/model/*
 __pycache__/
 vis/
+models/
 
 *.csv
 *.so
