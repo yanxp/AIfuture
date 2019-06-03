@@ -26,8 +26,8 @@ def parse_args():
     parser.add_argument('--crop_dir', default="../rf-finalA-cropped")
     # RetinaNet: prefix, epoch, ctx_id=0, network='net3', nms=0.4, nocrop=False, decay4 = 0.5, vote=False
     parser.add_argument('--pretrained-detector', dest="pdetect",
-                        help="detector checkpoint prefix", default="./models/R50")
-    parser.add_argument('--detector-epoch', dest='depoch', default=0, type=int)
+                        help="detector checkpoint prefix", default="./models/testR50")
+    parser.add_argument('--detector-epoch', dest='depoch', default=4, type=int)
     parser.add_argument('--detector-network', dest="dnet",
                         help="detector config type", default='net3')
     parser.add_argument('--nms', type=float, default=0.4)
@@ -84,16 +84,18 @@ def detect_or_return_origin(img_path, model):
     new_img = model.get_input(img, threshold=0.02)
 
     if new_img is None:
+        img = cv2.resize(img, (256, 256))
+        b = (256 - 224) // 2
+        img = img[b:-b, b:-b, :]
         return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)), False
     else:
+        new_img = cv2.resize(new_img, (224, 224))
         return Image.fromarray(new_img), True
 
 if __name__ == '__main__':
     args = parse_args()
 
     data_transforms = transforms.Compose([
-        transforms.Scale(256),
-        transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
     ])

@@ -58,6 +58,9 @@ def test(args):
         if new_img is None:
           not_detected += 1
           remain_path.append(tmp)
+          img = cv2.resize(img, (args.image_size + 30, args.image_size + 30))
+          b = 15
+          img = img[b:-b, b:-b, :]
           cv2.imwrite(tmp, img)
         else:
           new_img = cv2.resize(new_img, (args.image_size, args.image_size))

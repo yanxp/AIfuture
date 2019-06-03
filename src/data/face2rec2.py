@@ -85,7 +85,7 @@ def image_encode(args, i, item, q_out):
     if item.flag==0:
       fullpath = item.image_path
       header = mx.recordio.IRHeader(item.flag, item.label, item.id, 0)
-      #print('write', item.flag, item.id, item.label)
+      print('write', item.flag, item.id, item.label)
       if item.aligned:
         with open(fullpath, 'rb') as fin:
             img = fin.read()
@@ -99,8 +99,8 @@ def image_encode(args, i, item, q_out):
         q_out.put((i, s, oitem))
     else: 
       header = mx.recordio.IRHeader(item.flag, item.label, item.id, 0)
-      #print('write', item.flag, item.id, item.label)
-      s = mx.recordio.pack(header, '')
+      print('write', item.flag, item.id, item.label)
+      s = mx.recordio.pack(header, b'')
       q_out.put((i, s, oitem))
 
 
