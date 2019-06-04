@@ -52,6 +52,7 @@ class FaceImageIter(io.DataIter):
         self.imgidx = list(range(1, int(header.label[0])))
         self.id2range = {}
         self.seq_identity = list(range(int(header.label[0]), int(header.label[1])))
+
         for identity in self.seq_identity:
           s = self.imgrec.read_idx(identity)
           header, _ = recordio.unpack(s)
@@ -181,6 +182,7 @@ class FaceImageIter(io.DataIter):
       for _id in ids:
         v = self.id2range[_id]
         _list = list(range(*v))
+
         random.shuffle(_list)
         if len(_list)>self.images_per_identity:
           _list = _list[0:self.images_per_identity]
@@ -257,6 +259,7 @@ class FaceImageIter(io.DataIter):
           #print(net_out[0].asnumpy())
           net_out = net_out[0].asnumpy()
           # print(np.where(np.isnan(net_out)))
+
           #print('net_out', net_out.shape)
           if embeddings is None:
             embeddings = np.zeros( (bag_size, net_out.shape[1]))

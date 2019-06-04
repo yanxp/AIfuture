@@ -37,6 +37,7 @@ args = None
 
 
 def parse_args():
+
     parser = argparse.ArgumentParser(description='Train face network')
     # general
     parser.add_argument('--dataset', default=default.dataset, help='dataset config')
@@ -253,6 +254,7 @@ def train_net(args):
       initializer = mx.init.Xavier(rnd_type='gaussian', factor_type="out", magnitude=2) #resnet style
     else:
       initializer = mx.init.Xavier(rnd_type='uniform', factor_type="in", magnitude=2)
+    #initializer = mx.init.Xavier(rnd_type='gaussian', factor_type="out", magnitude=2) #resnet style
     _rescale = 1.0/args.ctx_num
     opt = optimizer.SGD(learning_rate=args.lr, momentum=args.mom, wd=args.wd, rescale_grad=_rescale)
     _cb = mx.callback.Speedometer(args.batch_size, args.frequent)

@@ -65,6 +65,7 @@ def test(args):
         else:
           new_img = cv2.resize(new_img, (args.image_size, args.image_size))
           cv2.imwrite(tmp, cv2.cvtColor(new_img, cv2.COLOR_RGB2BGR))
+
         print('save in ', tmp)
         all_img_num += 1
   
