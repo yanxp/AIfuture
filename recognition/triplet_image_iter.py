@@ -108,8 +108,6 @@ class FaceImageIter(io.DataIter):
         self.times = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         #self.reset()
 
-
-
     def pairwise_dists(self, embeddings):
       nd_embedding_list = []
       for i in range(self.ctx_num):
@@ -123,13 +121,13 @@ class FaceImageIter(io.DataIter):
         a_embedding = nd_embedding[idx]
         body = mx.nd.broadcast_sub(a_embedding, nd_embedding)
         body = body*body
-        body = mx.nd.sum_axis(body, axis=1)
+        body = mx.nd.sum_axis(body, axis=1) # L^2 distance ** 2
         nd_pdists.append(body)
         if len(nd_pdists)==self.ctx_num or idx==embeddings.shape[0]-1:
           for x in nd_pdists:
             pdists.append(x.asnumpy())
           nd_pdists = []
-      return pdists
+      return pdists # a list for every chosen sample
 
     def pick_triplets(self, embeddings, nrof_images_per_class):
       emb_start_idx = 0
@@ -143,18 +141,18 @@ class FaceImageIter(io.DataIter):
           nrof_images = int(nrof_images_per_class[i])
           for j in range(1,nrof_images):
               #self.time_reset()
-              a_idx = emb_start_idx + j - 1
+              a_idx = emb_start_idx + j - 1 # anchor
               #neg_dists_sqr = np.sum(np.square(embeddings[a_idx] - embeddings), 1)
               neg_dists_sqr = pdists[a_idx]
               #self.times[3] += self.time_elapsed()
 
               for pair in range(j, nrof_images): # For every possible positive pair.
-                  p_idx = emb_start_idx + pair
+                  p_idx = emb_start_idx + pair # positive sample
                   #self.time_reset()
                   pos_dist_sqr = np.sum(np.square(embeddings[a_idx]-embeddings[p_idx]))
                   #self.times[4] += self.time_elapsed()
                   #self.time_reset()
-                  neg_dists_sqr[emb_start_idx:emb_start_idx+nrof_images] = np.NaN
+                  neg_dists_sqr[emb_start_idx:emb_start_idx+nrof_images] = np.NaN # not consider the same class
                   if self.triplet_max_ap>0.0:
                     if pos_dist_sqr>self.triplet_max_ap:
                       continue
@@ -307,8 +305,8 @@ class FaceImageIter(io.DataIter):
           _triplets = triplets[ba:bb]
           for i in range(3):
             for triplet in _triplets:
-              _pos = triplet[i]
-              _idx = tag[_pos][1]
+              _pos = triplet[i] # position in sampled embedding
+              _idx = tag[_pos][1] # index in .rec file
               self.seq.append(_idx)
           ba = bb
         self.times[2] += self.time_elapsed()

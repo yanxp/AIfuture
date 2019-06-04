@@ -135,40 +135,10 @@ class RetinaFace:
       self._feat_stride_fpn = [32,16,8]
     print('sym size:', len(sym))
 
-    self.TEST_SCALES = [320, 640]
-    self.target_size = (640, 800)
     image_size = (640, 640)
     self.model = mx.mod.Module(symbol=sym, context=self.ctx, label_names = None)
     self.model.bind(data_shapes=[('data', (1, 3, image_size[0], image_size[1]))], for_training=False)
     self.model.set_params(arg_params, aux_params)
-
-  def get_scales(self, img):
-    im_shape = img.shape
-    target_size = self.target_size[0]
-    max_size = self.target_size[1]
-    im_size_min = np.min(im_shape[0:2])
-    im_size_max = np.max(im_shape[0:2])
-    #if im_size_min>target_size or im_size_max>max_size:
-    im_scale = float(target_size) / float(im_size_min)
-    # prevent bigger axis from being more than max_size:
-    if np.round(im_scale * im_size_max) > max_size:
-        im_scale = float(max_size) / float(im_size_max)
-
-    scales = [float(scale)/target_size*im_scale for scale in self.TEST_SCALES]
-    return scales
-
-  def get_input(self, img, **kwargs):
-    scales = self.get_scales(img)
-    ret = self.detect(img, scales=scales, **kwargs)
-    if ret is None:
-      return None
-    bbox, points = ret
-    if bbox.shape[0]==0:
-      return None
-    bbox = bbox[0,0:4]
-    nimg = face_preprocess.preprocess(img, bbox, margin=20)
-    nimg = cv2.cvtColor(nimg, cv2.COLOR_BGR2RGB)
-    return nimg
 
   def detect(self, img, threshold=0.5, scales=[1.0], do_flip=False):
     #print('in_detect', threshold, scales, do_flip, do_nms)
