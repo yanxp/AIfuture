@@ -21,7 +21,7 @@ import face_preprocess
 
 class FaceModel(object):
   def __init__(self, detector = None, model = None):
-    self.TEST_SCALES = [320, 640]
+    self.TEST_SCALES = [640]
     self.target_size = (640, 640)
     self.detector = detector
     self.model = model

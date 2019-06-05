@@ -10,8 +10,10 @@ import torch.nn as nn
 import os
 from PIL import Image
 import VGG_FACE
-from retinaface import RetinaFace
 import cv2
+import torch.nn.functional as F
+from face_model import FaceModel
+from retinaface import RetinaFace
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
@@ -75,8 +77,10 @@ class TripletNetwork(nn.Module):
         self.cnn = VGG_FACE.VGG_FACE
         module_list = list(self.cnn.children())
         self.model = nn.Sequential(*module_list[:-4])
+        
     def forward(self, x):
         out = self.model(x)
+        out = F.normalize(out, p=2, dim=1)
         return out
 
 def detect_or_return_origin(img_path, model):
@@ -103,6 +107,7 @@ if __name__ == '__main__':
     net = TripletNetwork()
     net = torch.nn.DataParallel(net, device_ids=range(torch.cuda.device_count()))
     checkpoint = torch.load(args.model)
+    checkpoint = {k: checkpoint[k] for k in net.state_dict().keys() }
     net.load_state_dict(checkpoint)
     net = net.cuda()
     net.eval()
@@ -128,14 +133,14 @@ if __name__ == '__main__':
         vis_gallery_0 = 'vis/gallery/0'
         os.makedirs(vis_gallery_0, exist_ok=True)
 
-    detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=True)
-
+    detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=False)
+    fmodel = FaceModel(detector)
 
     probeFile = open(probe, "r")
     readerProbe = csv.reader(probeFile)
     for _, item in readerProbe:
         img0_path = os.path.join(img_dir, item)
-        img0, hit = detect_or_return_origin(img0_path, detector)
+        img0, hit = detect_or_return_origin(img0_path, fmodel)
         prob_imgs.append(img0)
         if args.vis:
             if hit:
@@ -151,7 +156,7 @@ if __name__ == '__main__':
     readerGallery = csv.reader(galleryFile)
     for _, item in readerGallery:
         img1_path = os.path.join(img_dir, item)
-        img1, hit = detect_or_return_origin(img1_path, detector)
+        img1, hit = detect_or_return_origin(img1_path, fmodel)
         gallery_imgs.append(img1)
         if args.vis:
             if hit:
@@ -167,14 +172,14 @@ if __name__ == '__main__':
 
     for img0 in prob_imgs:
         img0 = data_transforms(img0)
-        img0 = Variable(img0.unsqueeze(0), volatile=True).cuda()
+        img0 = Variable(img0.unsqueeze(0)).cuda()
         probefeature = net(img0)
         probeFeature.append(probefeature.data.cpu().numpy())
 
 
     for img1 in gallery_imgs:
         img1 = data_transforms(img1)
-        img1 = Variable(img1.unsqueeze(0), volatile=True).cuda()
+        img1 = Variable(img1.unsqueeze(0)).cuda()
         galleryfeature = net(img1)
         galleryFeature.append(galleryfeature.data.cpu().numpy())
 
@@ -184,7 +189,7 @@ if __name__ == '__main__':
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 
-    for th in [0.3, 0.35, 0.375, 0.4, 0.425]:
+    for th in np.arange(0.1,0.3,0.02): #0.166
         k = 0
         metric = edumetric(galleryFeature, probeFeature, th)
         #metric = cosmetric(galleryFeature, probeFeature)

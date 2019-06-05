@@ -10,7 +10,8 @@ from mxnet import ndarray as nd
 import cv2
 from .rcnn.logger import logger
 from .retinaface import RetinaFace
-
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from face_model import FaceModel
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test widerface by retinaface detector')
@@ -23,7 +24,7 @@ def parse_args():
     parser.add_argument('--output', help='output folder', default='/home/chenriquan/aifuture/rf-cropped-training', type=str)
     parser.add_argument('--nms', type=float, default=0.4)
     parser.add_argument('--nocrop', action="store_true")
-    parser.add_argument('--image_size', type=int, default=224, help="output image size")
+    parser.add_argument('--image_size', type=int, default=112, help="output image size")
     args = parser.parse_args()
     return args
 
@@ -42,7 +43,8 @@ def test(args):
   output_root = os.path.join(args.output, 'images')
   if not os.path.exists(output_root):
     os.makedirs(output_root, exist_ok=True)
-  detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=True)
+  detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
+  fmodel = FaceModel(detector)
   remain_path = []
   for cls in os.listdir(args.data_rpath):
     for domain in ['0', '1']:
@@ -50,7 +52,7 @@ def test(args):
       for imgn in os.listdir(path):
         imgp = os.path.join(path, imgn)
         img = cv2.imread(imgp)
-        new_img = detector.get_input(img, threshold=0.02)
+        new_img = fmodel.get_input(img, threshold=0.02)
 
         tmp = os.path.join(output_root, cls, domain)
         os.makedirs(tmp, exist_ok=True)

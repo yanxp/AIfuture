@@ -30,20 +30,23 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
+def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
     LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
     res = []
     for i, p in enumerate(probeFeature):
         metric = np.zeros( (len(galleryFeature),) )
+        # p = p / np.linalg.norm(p)
         for j, g in enumerate(galleryFeature):
+            # g = g / np.linalg.norm(g)
             if dis_type == "l2":
                 metric[j] = np.sum((p - g) ** 2)
             elif dis_type == "cos":
                 metric[j] = np.sum(p * g)
             elif dis_type == "l1":
-                metric[j] = np.linalg.norm(p - g)
+                metric[j] = np.sqrt(np.sum((p - g)**2))
         
         idx = np.argsort(metric)
+        #print(metric[idx[LEN_THRESHOD]] - metric[idx[0]])
         if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
             res.append(idx[0])
         else:
@@ -53,6 +56,14 @@ def metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
 def detect_or_return_origin(img_path, model):
     # return RGB image (c, h, w)
     img = cv2.imread(img_path)
+
+    # remenber to delete when in interface.py!
+    if img.shape[0] == 224 and img.shape[1] == 224:
+        img = cv2.resize(img, (112,112))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        aligned = np.transpose(img, (2,0,1))
+        return aligned, True
+
     new_img = model.get_input(img, threshold=0.02)
 
     if new_img is None:
@@ -84,7 +95,14 @@ if __name__ == '__main__':
     # -------------------------
     fmodel = FaceModel()
     # 2. face detection
-    detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=True)
+    path, epoch = args.model.split(',')
+    sym, arg_params, aux_params = mx.model.load_checkpoint(path, int(epoch))
+    model = mx.mod.Module(context = mx.gpu(0), symbol = sym)
+    model.bind(data_shapes=[('data', (1, 3, 112, 112))])
+    model.set_params(arg_params, aux_params)
+    fmodel.model = model
+    
+    detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=False)
     fmodel.detector = detector
     with open(probe, "r") as probeFile:
         readerProbe = csv.reader(probeFile)
@@ -101,13 +119,6 @@ if __name__ == '__main__':
             gallery_imgs.append(img1)
     # -------------------------
     # 3. face recogonition
-    path, epoch = args.model.split(',')
-    sym, arg_params, aux_params = mx.model.load_checkpoint(path, int(epoch))
-    model = mx.mod.Module(context = mx.gpu(0), symbol = sym)
-    model.bind(data_shapes=(1, 3, 224, 224))
-    model.set_params(arg_params, aux_params)
-    fmodel.model = model
-
     for img0 in prob_imgs:
         probefeature = fmodel.get_feature(img0)
         probeFeature.append(probefeature)
@@ -123,10 +134,9 @@ if __name__ == '__main__':
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 
-    for th in [0.3, 0.35, 0.375, 0.4, 0.425]:
+    for th in np.arange(0, 1, 0.1):
         k = 0
-        #metric = edumetric(galleryFeature, probeFeature, th)
-        metric = metric(galleryFeature, probeFeature, "cos", th)
+        metric = cal_metric(galleryFeature, probeFeature, "l1", th)
         for item in readerC:
             if metric[int(item[0])] == int(item[1]):
                 k += 1

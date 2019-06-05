@@ -124,7 +124,7 @@ dataset.aifuture = edict()
 dataset.aifuture.dataset = 'aifuture'
 dataset.aifuture.dataset_path = '/home/chenriquan/aifuture/rf-cropped-training'
 dataset.aifuture.num_classes = 973
-dataset.aifuture.image_shape = (224,224,3)
+dataset.aifuture.image_shape = (112,112,3)
 dataset.aifuture.val_targets = ['val']
 
 loss = edict()
@@ -165,7 +165,7 @@ loss.triplet.images_per_identity = 6 # 5
 loss.triplet.triplet_alpha = 0.3
 loss.triplet.triplet_bag_size = 4800 # 7200
 loss.triplet.triplet_max_ap = 0.0
-loss.triplet.per_batch_size = 24 # 60
+loss.triplet.per_batch_size = 60
 loss.triplet.lr = 0.05
 
 loss.atriplet = edict()
@@ -182,7 +182,7 @@ default = edict()
 
 # default network
 default.network = 'r50' #'r100'
-default.pretrained = ''#'../models/model-r50-am-lfw/model'
+default.pretrained = '../models/model-r50-am-lfw/model'
 default.pretrained_epoch = 0
 # default dataset
 default.dataset = 'aifuture'
@@ -191,11 +191,11 @@ default.frequent = 20
 default.verbose = 2000
 default.kvstore = 'device'
 
-default.end_epoch = 10000 # 15
+default.end_epoch = 2000
 default.lr = 0.1
 default.wd = 0.0005
 default.mom = 0.9
-default.per_batch_size = 24 # 128
+default.per_batch_size = 128
 default.ckpt = 1
 default.lr_steps = '100000,160000,220000'
 default.models_root = './models'

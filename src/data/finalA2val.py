@@ -30,15 +30,17 @@ with open(filename) as csvFile:
 bins = []
 issame = []
 paths = []
+neg_num = 4
 for pidx, gidx in pair_idxs:
     pidx = int(pidx)
     gidx = int(gidx)
     ppath = os.path.join(img_dir, paths0[pidx])
     if gidx != -1:
-        npath = np.random.choice(paths1)
-        npath = os.path.join(img_dir, npath)
-        paths += (ppath, npath)
-        issame.append(False)
+        npaths = np.random.choice(paths1, neg_num)
+        for npath in npaths:
+            npath = os.path.join(img_dir, npath)
+            paths += (ppath, npath)
+            issame.append(False)
     else:
         gpath = os.path.join(img_dir, paths1[gidx])
         paths += (ppath, gpath)
@@ -46,10 +48,11 @@ for pidx, gidx in pair_idxs:
 
         prob = np.ones((len(paths1), )) / (len(paths1) - 1)
         prob[gidx] = 0
-        npath = np.random.choice(paths1, p = prob)
-        npath = os.path.join(img_dir, npath)
-        paths += (ppath, npath)
-        issame.append(False)
+        npaths = np.random.choice(paths1, neg_num, p = prob)
+        for npath in npaths:
+            npath = os.path.join(img_dir, npath)
+            paths += (ppath, npath)
+            issame.append(False)
 
 for path in paths:
     with open(path, 'rb') as fin:
