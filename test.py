@@ -37,24 +37,6 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def cosmetric(galleryFeature, probeFeature):
-    metric = []
-    for i,p in enumerate(probeFeature):
-        vector_a = np.mat(p)
-        d = {"value": 0, "index": 0}
-        for j,g in enumerate(galleryFeature):
-            vector_b = np.mat(g)
-            num = float(vector_a * vector_b.T)
-            denom = np.linalg.norm(vector_a) * np.linalg.norm(vector_b)
-            cos = num / denom
-            if cos > d["value"]:
-                d["value"] = cos
-                d["index"] = j
-
-        metric.append(d["index"])
-
-    return metric
-
 def edumetric(galleryFeature, probeFeature, THRESHOD = 1.0):
     LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
     res = []
