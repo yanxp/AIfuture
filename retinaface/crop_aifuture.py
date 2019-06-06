@@ -26,26 +26,21 @@ def parse_args():
     parser.add_argument('--nocrop', action="store_true")
     parser.add_argument('--image_size', type=int, default=112, help="output image size")
     parser.add_argument('--align', action="store_true")
+    parser.add_argument('--dataset', default='train', choices=['train', 'finalA', 'testA'])
     args = parser.parse_args()
     return args
 
 detector = None
 args = None
-all_img_num = 0
-not_detected = 0
+
 os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT']='0'
-
-def test(args):
-  print('test with', args)
-  global detector
-  global all_img_num
-  global not_detected
-
+def crop_train(args, fmodel):
+  all_img_num = 0
+  not_detected = 0
+  
   output_root = os.path.join(args.output, 'images')
   if not os.path.exists(output_root):
     os.makedirs(output_root, exist_ok=True)
-  detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
-  fmodel = FaceModel(detector)
   remain_path = []
   for cls in os.listdir(args.data_rpath):
     for domain in ['0', '1']:
@@ -76,6 +71,42 @@ def test(args):
 
   with open(os.path.join(args.output, 'not_detected.txt'), 'w') as f:
     f.write('\n'.join(remain_path))
+
+def crop_testA(args, fmodel):
+  gallery = os.path.join(args.data_rpath, "list.csv")
+  img_dir = os.path.join(args.data_rpath, 'images')
+  with open(gallery, "r") as probeFile:
+    lines = list(probeFile.readlines())[1:]
+  for line in lines:
+    _, path1, path2, label = line.split(',')
+    path1 = os.path.join(img_dir, path1)
+    path2 = os.path.join(img_dir, path2)
+    for path in (path1, path2):
+      img = cv2.imread(path)
+      new_img = fmodel.get_input(img, threshold=0.02, align=args.align)
+
+      if new_img is None:
+        img = cv2.resize(img, (args.image_size + 30, args.image_size + 30))
+        b = 15
+        img = img[b:-b, b:-b, :]
+        cv2.imwrite(path, img)
+      else:
+        new_img = cv2.resize(new_img, (args.image_size, args.image_size))
+        cv2.imwrite(path, cv2.cvtColor(new_img, cv2.COLOR_RGB2BGR))
+      print('save in ', path)
+      
+def test(args):
+  print('test with', args)
+  global detector
+  
+  detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
+  fmodel = FaceModel(detector)
+  if args.dataset == 'train':
+    crop_train(args, fmodel)
+  elif args.dataset == 'finalA':
+    pass
+  elif args.dataset == 'testA':
+    crop_testA(args, fmodel)
     
 def main():
     global args

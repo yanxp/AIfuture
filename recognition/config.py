@@ -147,7 +147,7 @@ loss.arcface.loss_m3 = 0.0
 
 loss.cosface = edict()
 loss.cosface.loss_name = 'margin_softmax'
-loss.cosface.loss_s = 1.0 # 64.0
+loss.cosface.loss_s = 64.0
 loss.cosface.loss_m1 = 1.0
 loss.cosface.loss_m2 = 0.0
 loss.cosface.loss_m3 = 0.35
@@ -170,7 +170,7 @@ loss.triplet.lr = 0.05
 
 loss.atriplet = edict()
 loss.atriplet.loss_name = 'atriplet'
-loss.atriplet.images_per_identity = 6 # 5
+loss.atriplet.images_per_identity = 20 # 5
 loss.atriplet.triplet_alpha = 0.35
 loss.atriplet.triplet_bag_size = 4800 #7200
 loss.atriplet.triplet_max_ap = 0.0
@@ -181,21 +181,21 @@ loss.atriplet.lr = 0.05
 default = edict()
 
 # default network
-default.network = 'r50' #'r100'
-default.pretrained = '../models/model-r50-am-lfw/model'
+default.network = 'r100'
+default.pretrained = '../models/model-r100-ii/model'
 default.pretrained_epoch = 0
 # default dataset
 default.dataset = 'aifuture'
 default.loss = 'arcface'
 default.frequent = 20
-default.verbose = 400
+default.verbose = 2000
 default.kvstore = 'device'
 
-default.end_epoch = 24
-default.lr = 0.1
+default.end_epoch = 1700
+default.lr = 0.01 # 0.1
 default.wd = 0.0005
 default.mom = 0.9
-default.per_batch_size = 128
+default.per_batch_size = 32 #64
 default.ckpt = 1
 default.lr_steps = '100000,160000,220000'
 default.models_root = './models'
