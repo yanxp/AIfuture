@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument('--vis', action="store_true")
     parser.add_argument('--save_crop', action="store_true")
     parser.add_argument('--crop_dir', default="../rf-finalA-cropped")
+    parser.add_argument('--type', default='l1', choices=['l1','l2','cos'])
     # RetinaNet: prefix, epoch, ctx_id=0, network='net3', nms=0.4, nocrop=False, decay4 = 0.5, vote=False
     parser.add_argument('--pretrained-detector', dest="pdetect",
                         help="detector checkpoint prefix", default="./models/testR50")
@@ -134,9 +135,9 @@ if __name__ == '__main__':
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 
-    for th in np.arange(0, 1, 0.1):
+    for th in np.arange(0, 2, 0.1):
         k = 0
-        metric = cal_metric(galleryFeature, probeFeature, "l1", th)
+        metric = cal_metric(galleryFeature, probeFeature, args.type, th)
         for item in readerC:
             if metric[int(item[0])] == int(item[1]):
                 k += 1

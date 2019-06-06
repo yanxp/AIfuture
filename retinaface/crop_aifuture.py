@@ -25,6 +25,7 @@ def parse_args():
     parser.add_argument('--nms', type=float, default=0.4)
     parser.add_argument('--nocrop', action="store_true")
     parser.add_argument('--image_size', type=int, default=112, help="output image size")
+    parser.add_argument('--align', action="store_true")
     args = parser.parse_args()
     return args
 
@@ -52,7 +53,7 @@ def test(args):
       for imgn in os.listdir(path):
         imgp = os.path.join(path, imgn)
         img = cv2.imread(imgp)
-        new_img = fmodel.get_input(img, threshold=0.02)
+        new_img = fmodel.get_input(img, threshold=0.02, align=args.align)
 
         tmp = os.path.join(output_root, cls, domain)
         os.makedirs(tmp, exist_ok=True)

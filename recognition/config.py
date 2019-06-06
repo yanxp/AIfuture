@@ -125,7 +125,7 @@ dataset.aifuture.dataset = 'aifuture'
 dataset.aifuture.dataset_path = '/home/chenriquan/aifuture/rf-cropped-training'
 dataset.aifuture.num_classes = 973
 dataset.aifuture.image_shape = (112,112,3)
-dataset.aifuture.val_targets = ['val']
+dataset.aifuture.val_targets = ['pair']
 
 loss = edict()
 loss.softmax = edict()
@@ -147,7 +147,7 @@ loss.arcface.loss_m3 = 0.0
 
 loss.cosface = edict()
 loss.cosface.loss_name = 'margin_softmax'
-loss.cosface.loss_s = 64.0
+loss.cosface.loss_s = 1.0 # 64.0
 loss.cosface.loss_m1 = 1.0
 loss.cosface.loss_m2 = 0.0
 loss.cosface.loss_m3 = 0.35
@@ -188,10 +188,10 @@ default.pretrained_epoch = 0
 default.dataset = 'aifuture'
 default.loss = 'arcface'
 default.frequent = 20
-default.verbose = 2000
+default.verbose = 400
 default.kvstore = 'device'
 
-default.end_epoch = 2000
+default.end_epoch = 24
 default.lr = 0.1
 default.wd = 0.0005
 default.mom = 0.9

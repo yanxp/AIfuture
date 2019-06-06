@@ -26,7 +26,7 @@ class TripletNetwork(nn.Module):
         out = self.model(x)
         return out
 
-def edumetric(galleryFeature, probeFeature, THRESHOD = 0.156):
+def edumetric(galleryFeature, probeFeature, THRESHOD = 0.166):
     LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
     res = []
     for i, p in enumerate(probeFeature):
@@ -50,10 +50,10 @@ def detect_or_return_origin(img_path, model):
         img = cv2.resize(img, (256, 256))
         b = (256 - 224) // 2
         img = img[b:-b, b:-b, :]
-        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)), False
+        return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     else:
         new_img = cv2.resize(new_img, (224, 224))
-        return Image.fromarray(new_img), True
+        return Image.fromarray(new_img)
 
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
     """
@@ -80,6 +80,7 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     net = torch.nn.DataParallel(net, device_ids=range(torch.cuda.device_count()))
     load_name = os.getenv('PRETRAINED_MODEL')
     checkpoint = torch.load(load_name)
+    checkpoint = {k: checkpoint[k] for k in net.state_dict().keys() }
     net.load_state_dict(checkpoint)
     net = net.cuda()
     net.eval()

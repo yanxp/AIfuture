@@ -114,8 +114,8 @@ def get_symbol(args):
       an = anchor - negative
       ap = ap*ap
       an = an*an
-      ap = mx.symbol.sum(ap, axis=1, keepdims=1) #(T,1)
-      an = mx.symbol.sum(an, axis=1, keepdims=1) #(T,1)
+      ap = mx.symbol.sum(ap, axis=1, keepdims=1).sqrt() #(T,1)
+      an = mx.symbol.sum(an, axis=1, keepdims=1).sqrt() #(T,1)
       triplet_loss = mx.symbol.Activation(data = (ap-an+config.triplet_alpha), act_type='relu')
       triplet_loss = mx.symbol.mean(triplet_loss)
     else:
