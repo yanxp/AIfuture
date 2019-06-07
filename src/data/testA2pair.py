@@ -21,10 +21,11 @@ for line in lines:
     path1 = os.path.join(img_dir, path1)
     path2 = os.path.join(img_dir, path2)
     paths += (path1, path2)
-    if label == '0':
+    if int(label) == 0:
         issame.append(False)
     else:
         issame.append(True)
+    print(issame[-1], label)
 
 for path in paths:
     with open(path, 'rb') as fin:

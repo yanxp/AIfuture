@@ -41,13 +41,12 @@ def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
             # g = g / np.linalg.norm(g)
             if dis_type == "l2":
                 metric[j] = np.sum((p - g) ** 2)
-            elif dis_type == "cos":
-                metric[j] = np.sum(p * g)
             elif dis_type == "l1":
                 metric[j] = np.sqrt(np.sum((p - g)**2))
+            elif dis_type == 'cos':
+                metric[j] = - np.sum(p * g) # from large to small
         
         idx = np.argsort(metric)
-        #print(metric[idx[LEN_THRESHOD]] - metric[idx[0]])
         if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
             res.append(idx[0])
         else:
@@ -135,7 +134,7 @@ if __name__ == '__main__':
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 
-    for th in np.arange(0, 2, 0.1):
+    for th in np.arange(0, 1, 0.1):
         k = 0
         metric = cal_metric(galleryFeature, probeFeature, args.type, th)
         for item in readerC:

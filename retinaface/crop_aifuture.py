@@ -75,6 +75,8 @@ def crop_train(args, fmodel):
 def crop_testA(args, fmodel):
   gallery = os.path.join(args.data_rpath, "list.csv")
   img_dir = os.path.join(args.data_rpath, 'images')
+  with open(gallery, "r") as probeFile:
+    lines = list(probeFile.readlines())[1:]
   for line in lines:
     _, path1, path2, label = line.split(',')
     path1 = os.path.join(img_dir, path1)
