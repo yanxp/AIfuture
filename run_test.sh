@@ -31,7 +31,7 @@ unset __conda_setup
 # <<< conda init <<<
 conda activate afteam_911
 export MXNET_CUDNN_AUTOTUNE_DEFAULT=0
-export PRETRAINED_MODEL=./models/52.0_ours.pth
+export PRETRAINED_MODEL='models/r100arc,1'
 export FRAMEWORK='mxnet'
 #export FRAMEWORK='pytorch'
 

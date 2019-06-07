@@ -146,7 +146,7 @@ if __name__ == '__main__':
 
     galleryFeature = np.array(galleryFeature)
     probeFeature = np.array(probeFeature)
-    filename = rootpath + "ground_truth.csv"
+    filename = os.path.join(data_rpath, "ground_truth.csv")
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 

@@ -4,5 +4,4 @@ TEST_SET="../af2019-ksyun-finalA-20190518/"
 
 FILE=$1
 shift
-# python test.py --test-dataset ../af2019-ksyun-finalA-20190518/ --model models/finalmodel.pth $@
-python $FILE --test-dataset $TEST_SET $@
+python $FILE --data_rpath $TEST_SET $@

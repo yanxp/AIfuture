@@ -188,11 +188,11 @@ default.pretrained_epoch = 0
 default.dataset = 'aifuture'
 default.loss = 'arcface'
 default.frequent = 20
-default.verbose = 2000
+default.verbose = 500
 default.kvstore = 'device'
 
-default.end_epoch = 1700
-default.lr = 0.01 # 0.1
+default.end_epoch = 400
+default.lr = 0.1
 default.wd = 0.0005
 default.mom = 0.9
 default.per_batch_size = 32 #64

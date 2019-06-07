@@ -115,11 +115,11 @@ if __name__ == '__main__':
     # 4. prediction
     galleryFeature = np.array(galleryFeature)
     probeFeature = np.array(probeFeature)
-    filename = rootpath + "ground_truth.csv"
+    filename = os.path.join(data_rpath, "ground_truth.csv")
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 
-    for th in np.arange(0, 1, 0.1):
+    for th in np.arange(0, 0.6, 0.02):
         k = 0
         metric = mxnet_interface.cal_metric(galleryFeature, probeFeature, args.type, th)
         for item in readerC:
