@@ -7,11 +7,12 @@ import mxnet as mx
 from retinaface import RetinaFace
 from face_model import FaceModel
 import cv2
+import mxnet_interface
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Test Face Recogonition task')
-    parser.add_argument('--test-dataset', dest='test_dataset',
-                        help='test-dataset', type=str)
+    parser.add_argument('--data_rpath', dest='data_rpath', help='relative path of dataset')
+
     parser.add_argument('--model', dest='model',
                         help='model ckpt path', type=str)
     parser.add_argument('--prediction-file', dest='ppath',
@@ -30,28 +31,6 @@ def parse_args():
     parser.add_argument('--nocrop', action="store_true")
     args = parser.parse_args()
     return args
-
-def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
-    LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
-    res = []
-    for i, p in enumerate(probeFeature):
-        metric = np.zeros( (len(galleryFeature),) )
-        # p = p / np.linalg.norm(p)
-        for j, g in enumerate(galleryFeature):
-            # g = g / np.linalg.norm(g)
-            if dis_type == "l2":
-                metric[j] = np.sum((p - g) ** 2)
-            elif dis_type == "l1":
-                metric[j] = np.sqrt(np.sum((p - g)**2))
-            elif dis_type == 'cos':
-                metric[j] = - np.sum(p * g) # from large to small
-        
-        idx = np.argsort(metric)
-        if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
-            res.append(idx[0])
-        else:
-            res.append(-1)
-    return res
     
 def detect_or_return_origin(img_path, model):
     # return RGB image (c, h, w)
@@ -67,56 +46,62 @@ def detect_or_return_origin(img_path, model):
     new_img = model.get_input(img, threshold=0.02)
 
     if new_img is None:
-        img = cv2.resize(img, (256, 256))
-        b = (256 - 224) // 2
+        img = cv2.resize(img, (142, 142))
+        b = (142 - 112) // 2
         img = img[b:-b, b:-b, :]
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         aligned = np.transpose(img, (2,0,1))
         return aligned, False
     else:
-        new_img = cv2.resize(new_img, (224, 224))
+        new_img = cv2.resize(new_img, (112, 112))
         aligned = np.transpose(new_img, (2,0,1))
         return aligned, True
 
 if __name__ == '__main__':
     args = parse_args()
-    # 1. paths setting
-    galleryFeature = []
-    probeFeature = []
-    ground_truth = []
-    rootpath = args.test_dataset
-    if rootpath[-1] is not '/':
-        rootpath = rootpath + '/'
-    gallery = rootpath + "gallery.csv"
-    probe = rootpath + "probe.csv"
-    img_dir = rootpath + "images/"
-    prob_imgs = []
-    gallery_imgs = []
+    # 1. set path
+    data_rpath = args.data_rpath
+    gallery_dict = {}
+    probe_dict = {}
+    probe_csv = os.path.join(data_rpath, 'probe.csv')
+    for line in open(probe_csv):
+        probe_pic_id = line.strip().split(',')[0]
+        probe_pic_url = line.strip().split(',')[1]
+        probe_dict[probe_pic_id] = probe_pic_url
+
+    gallery_csv = os.path.join(data_rpath, 'gallery.csv')
+    for line in open(gallery_csv):
+        gallery_pic_id = line.strip().split(',')[0]
+        gallery_pic_url = line.strip().split(',')[1]
+        gallery_dict[gallery_pic_id] = gallery_pic_url
+    imgset_rpath = os.path.join(data_rpath, 'images')
     # -------------------------
-    fmodel = FaceModel()
     # 2. face detection
     path, epoch = args.model.split(',')
     sym, arg_params, aux_params = mx.model.load_checkpoint(path, int(epoch))
     model = mx.mod.Module(context = mx.gpu(0), symbol = sym)
     model.bind(data_shapes=[('data', (1, 3, 112, 112))])
     model.set_params(arg_params, aux_params)
-    fmodel.model = model
     
     detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=False)
-    fmodel.detector = detector
-    with open(probe, "r") as probeFile:
-        readerProbe = csv.reader(probeFile)
-        for _, item in readerProbe:
-            img0_path = os.path.join(img_dir, item)
-            img0, hit = detect_or_return_origin(img0_path, fmodel)
-            prob_imgs.append(img0)
+    fmodel = FaceModel(detector, model)
 
-    with open(gallery, "r") as galleryFile:
-        readerGallery = csv.reader(galleryFile)
-        for _, item in readerGallery:
-            img1_path = os.path.join(img_dir, item)
-            img1, hit = detect_or_return_origin(img1_path, fmodel)
-            gallery_imgs.append(img1)
+    # -------------------------------
+    # 3. get feature
+    probe_list = [(k, v) for k, v in probe_dict.items()]
+    gallery_list = [(k, v) for k, v in gallery_dict.items()]
+    galleryFeature = []
+    probeFeature = []
+    prob_imgs = []
+    gallery_imgs = []
+    for _, item in probe_list:
+        img0_path = os.path.join(imgset_rpath, item)
+        img0, hit = detect_or_return_origin(img0_path, fmodel)
+        prob_imgs.append(img0)
+    for _, item in gallery_list:
+        img1_path = os.path.join(imgset_rpath, item)
+        img1, hit = detect_or_return_origin(img1_path, fmodel)
+        gallery_imgs.append(img1)
     # -------------------------
     # 3. face recogonition
     for img0 in prob_imgs:
@@ -136,7 +121,7 @@ if __name__ == '__main__':
 
     for th in np.arange(0, 1, 0.1):
         k = 0
-        metric = cal_metric(galleryFeature, probeFeature, args.type, th)
+        metric = mxnet_interface.cal_metric(galleryFeature, probeFeature, args.type, th)
         for item in readerC:
             if metric[int(item[0])] == int(item[1]):
                 k += 1

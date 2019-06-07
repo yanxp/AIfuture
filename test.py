@@ -2,23 +2,23 @@
 from __future__ import print_function, division
 import argparse
 import csv
-import torchvision.transforms as transforms
 import numpy as np
+import os
+from PIL import Image
+import cv2
+
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
-import os
-from PIL import Image
-import VGG_FACE
-import cv2
-import torch.nn.functional as F
+import torchvision.transforms as transforms
+
 from face_model import FaceModel
 from retinaface import RetinaFace
+import pytorch_interface
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
-    parser.add_argument('--test-dataset', dest='test_dataset',
-                        help='test-dataset', type=str)
+    parser = argparse.ArgumentParser(description='Test Face Recogonition task')
+    parser.add_argument('--data_rpath', dest='data_rpath', help='relative path of dataset')
     parser.add_argument('--model', dest='model',
                         help='model', type=str)
     parser.add_argument('--prediction-file', dest='ppath',
@@ -37,34 +37,6 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def edumetric(galleryFeature, probeFeature, THRESHOD = 1.0):
-    LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
-    res = []
-    for i, p in enumerate(probeFeature):
-        metric = np.zeros( (len(galleryFeature),) )
-        p = p / np.linalg.norm(p)
-        for j, g in enumerate(galleryFeature):
-            g = g / np.linalg.norm(g)
-            metric[j] = np.sum((p - g) ** 2)
-        idx = np.argsort(metric)
-        if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
-            res.append(idx[0])
-        else:
-            res.append(-1)
-    return res
-
-class TripletNetwork(nn.Module):
-    def __init__(self):
-        super(TripletNetwork, self).__init__()
-        self.cnn = VGG_FACE.VGG_FACE
-        module_list = list(self.cnn.children())
-        self.model = nn.Sequential(*module_list[:-4])
-        
-    def forward(self, x):
-        out = self.model(x)
-        out = F.normalize(out, p=2, dim=1)
-        return out
-
 def detect_or_return_origin(img_path, model):
     img = cv2.imread(img_path)
     new_img = model.get_input(img, threshold=0.02)
@@ -80,31 +52,22 @@ def detect_or_return_origin(img_path, model):
 
 if __name__ == '__main__':
     args = parse_args()
+    # 1. set path
+    data_rpath = args.data_rpath
+    gallery_dict = {}
+    probe_dict = {}
+    probe_csv = os.path.join(data_rpath, 'probe.csv')
+    for line in open(probe_csv):
+        probe_pic_id = line.strip().split(',')[0]
+        probe_pic_url = line.strip().split(',')[1]
+        probe_dict[probe_pic_id] = probe_pic_url
 
-    data_transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
-    ])
-
-    net = TripletNetwork()
-    net = torch.nn.DataParallel(net, device_ids=range(torch.cuda.device_count()))
-    checkpoint = torch.load(args.model)
-    checkpoint = {k: checkpoint[k] for k in net.state_dict().keys() }
-    net.load_state_dict(checkpoint)
-    net = net.cuda()
-    net.eval()
-
-    galleryFeature = []
-    probeFeature = []
-    ground_truth = []
-    rootpath = args.test_dataset
-    if rootpath[-1] is not '/':
-        rootpath = rootpath + '/'
-    gallery = rootpath + "gallery.csv"
-    probe = rootpath + "probe.csv"
-    img_dir = rootpath + "images/"
-    prob_imgs = []
-    gallery_imgs = []
+    gallery_csv = os.path.join(data_rpath, 'gallery.csv')
+    for line in open(gallery_csv):
+        gallery_pic_id = line.strip().split(',')[0]
+        gallery_pic_url = line.strip().split(',')[1]
+        gallery_dict[gallery_pic_id] = gallery_pic_url
+    imgset_rpath = os.path.join(data_rpath, 'images')
     if args.vis:
         vis_probe_1 = 'vis/probe/1'
         os.makedirs(vis_probe_1, exist_ok=True)
@@ -114,16 +77,37 @@ if __name__ == '__main__':
         os.makedirs(vis_gallery_1, exist_ok=True)
         vis_gallery_0 = 'vis/gallery/0'
         os.makedirs(vis_gallery_0, exist_ok=True)
+    # -------------------------------
+    # 2. model load
+    data_transforms = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+    ])
+
+    net = pytorch_interface.TripletNetwork()
+    net = torch.nn.DataParallel(net, device_ids=range(torch.cuda.device_count()))
+    checkpoint = torch.load(args.model)
+    checkpoint = {k: checkpoint[k] for k in net.state_dict().keys() }
+    net.load_state_dict(checkpoint)
+    net = net.cuda()
+    net.eval()
 
     detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=False)
     fmodel = FaceModel(detector)
+    # -------------------------------
+    # 3. get feature
+    probe_list = [(k, v) for k, v in probe_dict.items()]
+    gallery_list = [(k, v) for k, v in gallery_dict.items()]
+    galleryFeature = []
+    probeFeature = []
+    prob_imgs = []
+    gallery_imgs = []
 
-    probeFile = open(probe, "r")
-    readerProbe = csv.reader(probeFile)
-    for _, item in readerProbe:
-        img0_path = os.path.join(img_dir, item)
+    for _, item in probe_list:
+        img0_path = os.path.join(imgset_rpath, item)
         img0, hit = detect_or_return_origin(img0_path, fmodel)
         prob_imgs.append(img0)
+
         if args.vis:
             if hit:
                 img0.save(os.path.join(vis_probe_1, item[-10:]))
@@ -132,14 +116,12 @@ if __name__ == '__main__':
         if args.save_crop:
             os.makedirs(os.path.join(args.crop_dir,'images',os.path.dirname(item)), exist_ok=True)
             img0.save(os.path.join(args.crop_dir, 'images', item))
-    probeFile.close()
 
-    galleryFile = open(gallery, "r")
-    readerGallery = csv.reader(galleryFile)
-    for _, item in readerGallery:
-        img1_path = os.path.join(img_dir, item)
+    for _, item in gallery_list:
+        img1_path = os.path.join(imgset_rpath, item)
         img1, hit = detect_or_return_origin(img1_path, fmodel)
         gallery_imgs.append(img1)
+        
         if args.vis:
             if hit:
                 img1.save(os.path.join(vis_gallery_1, item[-10:]))
@@ -148,8 +130,6 @@ if __name__ == '__main__':
         if args.save_crop:
             os.makedirs(os.path.join(args.crop_dir,'images',os.path.dirname(item)), exist_ok=True)
             img1.save(os.path.join(args.crop_dir, 'images', item))
-    galleryFile.close()
-
     del detector
 
     for img0 in prob_imgs:
@@ -157,7 +137,6 @@ if __name__ == '__main__':
         img0 = Variable(img0.unsqueeze(0)).cuda()
         probefeature = net(img0)
         probeFeature.append(probefeature.data.cpu().numpy())
-
 
     for img1 in gallery_imgs:
         img1 = data_transforms(img1)
@@ -173,8 +152,7 @@ if __name__ == '__main__':
 
     for th in np.arange(0.1,0.3,0.02): #0.166
         k = 0
-        metric = edumetric(galleryFeature, probeFeature, th)
-        #metric = cosmetric(galleryFeature, probeFeature)
+        metric = pytorch_interface.edumetric(galleryFeature, probeFeature, th)
         for item in readerC:
             if metric[int(item[0])] == int(item[1]):
                 k += 1

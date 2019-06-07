@@ -32,7 +32,9 @@ unset __conda_setup
 conda activate afteam_911
 export MXNET_CUDNN_AUTOTUNE_DEFAULT=0
 export PRETRAINED_MODEL=./models/52.0_ours.pth
+export FRAMEWORK='mxnet'
+#export FRAMEWORK='pytorch'
 
 # 调用interface.py执行测试，其中data_rpath是数据集所在相对路径, team_number是参赛队伍编号，version_number是参赛队伍提交作品的版本号
 #python interface.py --data_rpath $1 --team_number 911 --version_number 0.2
-python interface.py --data_rpath ../B_test_set/testB --team_number 911 --version_number 0.3
+python interface.py --data_rpath ../B_test_set/testB --team_number 911 --version_number 1.0
