@@ -81,7 +81,7 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     
     galleryFeature = np.array(galleryFeature)
     probeFeature = np.array(probeFeature)
-    preds = cal_metric(galleryFeature, probeFeature, "cos", 0.18)
+    preds = cal_metric(galleryFeature, probeFeature, "cos", 0.16)
 
     result = [] # result = [("1", "2"), ("2", "4")]
     for i, p in enumerate(preds):

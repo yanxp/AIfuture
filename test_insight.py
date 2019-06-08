@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
     max_pred = None
     max_auc = 0
-    for th in np.arange(0, 0.6, 0.02):
+    for th in np.arange(0, 0.3, 0.01):
         k = 0
         type1 = 0
         type2 = 0
