@@ -99,7 +99,7 @@ def image_encode(args, i, item, q_out):
         q_out.put((i, s, oitem))
     else: 
       header = mx.recordio.IRHeader(item.flag, item.label, item.id, 0)
-      print('write', item.flag, item.id, item.label)
+      print('write', item.flag, item.id, item.label, ' ', item.label[1]-item.label[0])
       s = mx.recordio.pack(header, b'')
       q_out.put((i, s, oitem))
 

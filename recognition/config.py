@@ -27,6 +27,7 @@ config.data_color = 0
 config.data_images_filter = 0
 config.count_flops = True
 config.memonger = False #not work now
+config.dropout = 0.1 # 0
 
 
 # network settings
@@ -170,9 +171,9 @@ loss.triplet.lr = 0.05
 
 loss.atriplet = edict()
 loss.atriplet.loss_name = 'atriplet'
-loss.atriplet.images_per_identity = 20 # 5
+loss.atriplet.images_per_identity = 70 # 5
 loss.atriplet.triplet_alpha = 0.35
-loss.atriplet.triplet_bag_size = 4800 #7200
+loss.atriplet.triplet_bag_size = 7200
 loss.atriplet.triplet_max_ap = 0.0
 loss.atriplet.per_batch_size = 60
 loss.atriplet.lr = 0.05

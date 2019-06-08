@@ -119,11 +119,56 @@ if __name__ == '__main__':
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
 
+    max_pred = None
+    max_auc = 0
     for th in np.arange(0, 0.6, 0.02):
         k = 0
+        type1 = 0
+        type2 = 0
         metric = mxnet_interface.cal_metric(galleryFeature, probeFeature, args.type, th)
         for item in readerC:
             if metric[int(item[0])] == int(item[1]):
                 k += 1
+            elif metric[int(item[0])] == -1: # inter distance is small
+                type1 += 1
+            elif int(item[1]) != -1: # wrong answer: intra distance is larger than inter distance
+                type2 += 1
         auc = k / len(metric)
-        print('threshod: {} , correct: {}, auc: {}'.format(th, k, auc))
+        if auc > max_auc:
+            max_pred = metric
+            max_auc = auc
+        print('threshod: {} , correct: {}, auc: {}, type1 error {}, type2 error {}'.format(th, k, auc, type1, type2))
+
+    if args.vis:
+        fake1 = 'vis/fake1'
+        fake2 = 'vis/fake2'
+        fake3 = 'vis/fake3'
+        os.makedirs(fake1, exist_ok=True)
+        os.makedirs(fake2, exist_ok=True)
+        os.makedirs(fake3, exist_ok=True)
+        for item in readerC:
+            if max_pred[int(item[0])] != int(item[1]):
+                if int(item[1]) == -1:
+                    tmp = np.concatenate(
+                        (prob_imgs[int(item[0])], gallery_imgs[ max_pred[int(item[0])] ]),
+                        axis=-1)
+                    tmp = np.transpose(tmp, (1,2,0))
+                    cv2.imwrite(
+                        os.path.join(fake1, probe_dict[item[0]][-10:]),
+                        cv2.cvtColor(tmp, cv2.COLOR_RGB2BGR))
+                elif max_pred[int(item[0])] == -1:
+                    tmp = np.concatenate(
+                        (prob_imgs[int(item[0])], gallery_imgs[ int(item[1]) ]),
+                        axis=-1)
+                    tmp = np.transpose(tmp, (1,2,0))
+                    cv2.imwrite(
+                        os.path.join(fake2, probe_dict[item[0]][-10:]),
+                        cv2.cvtColor(tmp, cv2.COLOR_RGB2BGR))
+                elif int(item[1]) != -1:
+                    tmp = np.concatenate(
+                        (prob_imgs[int(item[0])], gallery_imgs[ max_pred[int(item[0])] ], gallery_imgs[ int(item[1]) ]),
+                        axis=-1)
+                    tmp = np.transpose(tmp, (1,2,0))
+                    cv2.imwrite(
+                        os.path.join(fake3, probe_dict[item[0]][-10:]),
+                        cv2.cvtColor(tmp, cv2.COLOR_RGB2BGR))
