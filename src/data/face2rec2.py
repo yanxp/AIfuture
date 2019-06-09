@@ -58,6 +58,11 @@ def read_list(path_in):
               #continue
             item.id = _id
             item.label = [label, item.aligned]
+            if item.bbox is not None:
+                item.label += list(item.bbox)
+                if item.landmark is not None:
+                    item.label += item.landmark
+            
             yield item
             if label!=last[0]:
               if last[1]>=0:

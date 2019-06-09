@@ -27,6 +27,7 @@ def parse_args():
     parser.add_argument('--image_size', type=int, default=112, help="output image size")
     parser.add_argument('--align', action="store_true")
     parser.add_argument('--dataset', default='train', choices=['train', 'finalA', 'testA'])
+    parser.add_argument('--lst', default='', help='use this to generate lst file')
     args = parser.parse_args()
     return args
 
@@ -42,31 +43,49 @@ def crop_train(args, fmodel):
   if not os.path.exists(output_root):
     os.makedirs(output_root, exist_ok=True)
   remain_path = []
+  i = 0
+  if len(args.lst) > 0:
+    lst_file = open(args.lst, 'w')
   for cls in os.listdir(args.data_rpath):
     for domain in ['0', '1']:
       path = os.path.join(args.data_rpath, cls, domain)
       for imgn in os.listdir(path):
         imgp = os.path.join(path, imgn)
         img = cv2.imread(imgp)
-        new_img = fmodel.get_input(img, threshold=0.02, align=args.align)
+        if len(args.lst) == 0:
+          new_img = fmodel.get_input(img, threshold=0.02, align=args.align)
 
-        tmp = os.path.join(output_root, cls, domain)
-        os.makedirs(tmp, exist_ok=True)
-        tmp = os.path.join(tmp, imgn)
-        if new_img is None:
-          not_detected += 1
-          remain_path.append(tmp)
-          img = cv2.resize(img, (args.image_size + 30, args.image_size + 30))
-          b = 15
-          img = img[b:-b, b:-b, :]
-          cv2.imwrite(tmp, img)
+          tmp = os.path.join(output_root, cls, domain)
+          os.makedirs(tmp, exist_ok=True)
+          tmp = os.path.join(tmp, imgn)
+          if new_img is None:
+            not_detected += 1
+            remain_path.append(tmp)
+            img = cv2.resize(img, (args.image_size + 30, args.image_size + 30))
+            b = 15
+            img = img[b:-b, b:-b, :]
+            cv2.imwrite(tmp, img)
+          else:
+            new_img = cv2.resize(new_img, (args.image_size, args.image_size))
+            cv2.imwrite(tmp, cv2.cvtColor(new_img, cv2.COLOR_RGB2BGR))
+
+          print('save in ', tmp)
         else:
-          new_img = cv2.resize(new_img, (args.image_size, args.image_size))
-          cv2.imwrite(tmp, cv2.cvtColor(new_img, cv2.COLOR_RGB2BGR))
-
-        print('save in ', tmp)
+          annots = fmodel.get_annots(img, thershold=0.02)
+          s = "0\t" + imgp + '\t' + str(i)
+          print(s)
+          if annots is not None:
+            s += '\t' + '\t'.join(map(int, annots[0]))
+            landmark = annots[1].reshape((10,))
+            s += '\t' + '\t'.join(map(int, landmark)) + '\n'
+            lst_file.write(s)
+          else:
+            lst_file.write(s + '\n')
+            not_detected += 1
+            remain_path.append(tmp)
         all_img_num += 1
-  
+    
+    i += 1
   print('all_img_num: {}, not detected: {}, proportion: {:.3f}'.format(all_img_num, not_detected, not_detected/all_img_num))
 
   with open(os.path.join(args.output, 'not_detected.txt'), 'w') as f:

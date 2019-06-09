@@ -30,10 +30,7 @@ config.count_flops = True
 config.memonger = False #not work now
 config.dropout = 0
 
-
-config.detector_pretrained = '../models/testR50,4'
-config.detector_nms = 0.4
-config.detector_nocrop = False
+config.use_annots = True # use bbox and landmark infomation
 # network settings
 network = edict()
 

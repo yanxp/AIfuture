@@ -16,12 +16,12 @@ def parse_lst_line(line):
     bbox = np.zeros( (4,), dtype=np.int32)
     for i in range(3,7):
       bbox[i-3] = int(vec[i])
-    landmark = None
     if len(vec)>7:
       _l = []
       for i in range(7,17):
-        _l.append(float(vec[i]))
-      landmark = np.array(_l).reshape( (2,5) ).T
+        _l.append(int(vec[i])) # origin: float
+      # landmark = np.array(_l).reshape( (2,5) ).T
+      landmark = _l
   #print(aligned)
   return image_path, label, bbox, landmark, aligned
 
