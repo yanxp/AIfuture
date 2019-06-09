@@ -53,9 +53,9 @@ def read_list(path_in):
             item = edict()
             item.flag = 0
             item.image_path, label, item.bbox, item.landmark, item.aligned = face_preprocess.parse_lst_line(line)
-            if not item.aligned and item.landmark is None:
+            #if not item.aligned and item.landmark is None:
               #print('ignore line', line)
-              continue
+              #continue
             item.id = _id
             item.label = [label, item.aligned]
             yield item
@@ -83,25 +83,25 @@ def image_encode(args, i, item, q_out):
     oitem = [item.id]
     #print('flag', item.flag)
     if item.flag==0:
-      fullpath = item.image_path
-      header = mx.recordio.IRHeader(item.flag, item.label, item.id, 0)
-      print('write', item.flag, item.id, item.label)
-      if item.aligned:
+        fullpath = item.image_path
+        header = mx.recordio.IRHeader(item.flag, item.label, item.id, 0)
+        print('write', item.flag, item.id, item.label)
+        # if item.aligned:
         with open(fullpath, 'rb') as fin:
             img = fin.read()
         s = mx.recordio.pack(header, img)
         q_out.put((i, s, oitem))
-      else:
-        img = cv2.imread(fullpath, args.color)
-        assert item.landmark is not None
-        img = face_preprocess.preprocess(img, bbox = item.bbox, landmark=item.landmark, image_size='%d,%d'%(args.image_h, args.image_w))
-        s = mx.recordio.pack_img(header, img, quality=args.quality, img_fmt=args.encoding)
-        q_out.put((i, s, oitem))
+        # else:
+        #     img = cv2.imread(fullpath, args.color)
+        #     assert item.landmark is not None
+        #     img = face_preprocess.preprocess(img, bbox = item.bbox, landmark=item.landmark, image_size='%d,%d'%(args.image_h, args.image_w))
+        #     s = mx.recordio.pack_img(header, img, quality=args.quality, img_fmt=args.encoding)
+        #     q_out.put((i, s, oitem))
     else: 
-      header = mx.recordio.IRHeader(item.flag, item.label, item.id, 0)
-      print('write', item.flag, item.id, item.label, ' ', item.label[1]-item.label[0])
-      s = mx.recordio.pack(header, b'')
-      q_out.put((i, s, oitem))
+        header = mx.recordio.IRHeader(item.flag, item.label, item.id, 0)
+        print('write', item.flag, item.id, item.label, ' ', item.label[1]-item.label[0])
+        s = mx.recordio.pack(header, b'')
+        q_out.put((i, s, oitem))
 
 
 def read_worker(args, q_in, q_out):

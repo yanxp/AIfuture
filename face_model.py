@@ -40,8 +40,8 @@ class FaceModel(object):
 
     scales = [float(scale)/target_size*im_scale for scale in self.TEST_SCALES]
     return scales
-
-  def get_input(self, img, align=False,**kwargs):
+  
+  def get_annots(self, img, **kwargs):
     scales = self.get_scales(img)
     ret = self.detector.detect(img, scales=scales, **kwargs)
     if ret is None:
@@ -49,9 +49,17 @@ class FaceModel(object):
     bbox, points = ret
     if bbox.shape[0]==0:
       return None
-    bbox = bbox[0,0:4]
+    bbox = bbox[0, 0:4]
+    return bbox, points
+
+  def get_input(self, img, align=False,**kwargs):
+    res = self.get_annots(img, **kwargs)
+    if res is None:
+      return None
+    bbox, points = res
+
     if align:
-      nimg = face_preprocess.preprocess(img, bbox, points, margin=20)
+      nimg = face_preprocess.preprocess(img, bbox, points, margin=20, image_size='112,112')
     else:
       nimg = face_preprocess.preprocess(img, bbox, margin=20)
     nimg = cv2.cvtColor(nimg, cv2.COLOR_BGR2RGB)

@@ -15,11 +15,16 @@ import cv2
 from PIL import Image
 from io import BytesIO
 
+from config import config
 import mxnet as mx
 from mxnet import ndarray as nd
 from mxnet import io
 from mxnet import recordio
-
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src', 'common'))
+import face_preprocess
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from retinaface import RetinaFace
+from face_model import FaceModel
 logger = logging.getLogger()
 
 
@@ -80,16 +85,23 @@ class FaceImageIter(io.DataIter):
         self.shuffle = shuffle
         self.image_size = '%d,%d'%(data_shape[1],data_shape[2])
         self.rand_mirror = rand_mirror
-        print('rand_mirror', rand_mirror)
+        print('rand_mirror: {}, cutoff {}, random_gray: {}, cja: {}'
+          .format(rand_mirror, cutoff, config.random_gray,color_jittering))
         self.cutoff = cutoff
         self.color_jittering = color_jittering
         self.CJA = mx.image.ColorJitterAug(0.125, 0.125, 0.125)
+        self.RandomGray = mx.image.RandomGrayAug(config.random_gray)
         self.provide_label = [(label_name, (batch_size,))]
         #print(self.provide_label[0][1])
         self.cur = 0
         self.nbatch = 0
         self.is_init = False
 
+        self.face_model = None
+        if len(config.detector_pretrained) > 0:
+          
+          n,e = config.detector_pretrained.split(',')
+          self.face_model = FaceModel(RetinaFace(n, int(e), 0, nms=config.detector_nms, nocrop=config.detector_nocrop))
 
     def reset(self):
         """Resets the iterator to the beginning of the data."""
@@ -116,18 +128,19 @@ class FaceImageIter(io.DataIter):
               s = self.imgrec.read_idx(idx)
               header, img = recordio.unpack(s)
               label = header.label
+              aligned = True
               if not isinstance(label, numbers.Number):
-                label = label[0]
-              return label, img, None, None
+                  label, aligned = label # label = [class, aligned]
+              return label, img, None, None, aligned
             else:
               label, fname, bbox, landmark = self.imglist[idx]
-              return label, self.read_image(fname), bbox, landmark
+              return label, self.read_image(fname), bbox, landmark, False
         else:
             s = self.imgrec.read()
             if s is None:
                 raise StopIteration
             header, img = recordio.unpack(s)
-            return header.label, img, None, None
+            return header.label, img, None, None, True
 
     def brightness_aug(self, src, x):
       alpha = 1.0 + random.uniform(-x, x)
@@ -179,6 +192,28 @@ class FaceImageIter(io.DataIter):
       img = Image.open(BytesIO(buf))
       return nd.array(np.asarray(img, 'float32'))
 
+    def multi_margin_aug(self, img, annot):
+        c, h, w = self.data_shape
+        if annot is None:
+          img = cv2.resize(img, (h + 30, w + 30))
+          b = 15
+          img = img[b:-b, b:-b, :]
+          img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+          return mx.nd.array(img)
+
+        box, landmark = annot
+        align = random.randint(0, 1)
+
+        if align == 1 and h==112 and w==112:
+          nimg = face_preprocess.preprocess(img, box, landmark, image_size="112,112")
+        else:
+          lower = - min(max((h - 20) // 2, (w - 20)// 2, 0),  15)
+          margin = np.random.randint(lower, 71)
+          nimg = face_preprocess.preprocess(img, box, margin=margin) # margin is only used when landmark is not used
+          nimg = cv2.resize(nimg, (h, w))
+        
+        nimg = cv2.cvtColor(nimg, cv2.COLOR_BGR2RGB)
+        return mx.nd.array(nimg)
 
     def next(self):
         if not self.is_init:
@@ -195,8 +230,16 @@ class FaceImageIter(io.DataIter):
         i = 0
         try:
             while i < batch_size:
-                label, s, bbox, landmark = self.next_sample()
-                _data = self.imdecode(s)
+                label, s, bbox, landmark, aligned = self.next_sample()
+                # raw data augument
+                if not aligned and self.face_model is not None:
+                  _data = mx.image.imdecode(s, to_rgb=0)
+                  img = _data.asnumpy()
+                  annot = self.face_model.get_annots(img)
+                  _data = self.multi_margin_aug(img, annot)
+                else:
+                  _data = self.imdecode(s)
+                # _data is an RGB ndarray,  (h, w, 3)
                 if _data.shape[0]!=self.data_shape[1]:
                   _data = mx.image.resize_short(_data, self.data_shape[1])
                 if self.rand_mirror:
@@ -229,6 +272,10 @@ class FaceImageIter(io.DataIter):
                     endw = min(_data.shape[1], centerw+half)
                     #print(starth, endh, startw, endw, _data.shape)
                     _data[starth:endh, startw:endw, :] = 128
+                if config.random_gray > 0:
+                  _data = _data.astype('float32', copy=False)
+                  _data = self.RandomGray(_data)
+
                 data = [_data]
                 try:
                     self.check_valid_image(data)
