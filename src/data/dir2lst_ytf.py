@@ -29,4 +29,4 @@ for person_name in person_names:
     ret += _ret
   label+=1
 for item in ret:
-  print("%d\t%s\t%d" % (1, item.image_path, int(item.classname)))
+  print("%d\t%s\t%d" % (0, item.image_path, int(item.classname))) # not align for data augument

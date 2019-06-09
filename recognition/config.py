@@ -23,13 +23,16 @@ config.fc7_no_bias = False
 config.max_steps = 0
 config.data_rand_mirror = True
 config.data_cutoff = False
-config.data_color = 0
+config.data_color = 0.125 # 0 # (0, 1) color_aug, (1, +\infty) data compress
+config.random_gray = 0.2
 config.data_images_filter = 0
 config.count_flops = True
 config.memonger = False #not work now
-config.dropout = 0.1 # 0
+config.dropout = 0
 
-
+config.detector_pretrained = '../models/testR50,4'
+config.detector_nms = 0.4
+config.detector_nocrop = False
 # network settings
 network = edict()
 
