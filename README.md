@@ -27,6 +27,15 @@
 CUDA_VISIBLE_DEVICES=4,5,6,7 python -u train.py --dataset aifuture --loss arcface --lr 0.001
 # per-batch-size 32 verbose 500 获得r100arc-0004
 ```
+* 6月8日 版本1.1
+提交试用atriplet loss微调的模型，测试成绩变差，估计过拟合。
+
+* 6月9日 版本1.2
+发现昨天的训练对于dropout设置错误，重新训练了两个模型，根据可视化结果选择r100arc-0006.params
+```
+CUDA_VISIBLE_DEVICES=4,5,6,7 python -u train.py --dataset aifuture --loss arcface --lr 0.001 --pretrained ../models/..s/model-r100-ii/model --ckpt 2 --verbose 500
+```
+实验停止时，训练集精度大约为95%。另外0002的表现也不错，但是可视化结果看起来不太靠谱，并且训练集精度只有45%左右，估计只是运用finetune之前学到的特征来进行匹配。
 
 # 运行过程
 ## 获得测试结果
