@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import os
 import cv2
 import numpy as np
+import scipy.spatial.distance as spd
 import mxnet as mx
 from face_model import FaceModel
 from retinaface import RetinaFace
@@ -27,7 +28,17 @@ def detect_or_return_origin(img_path, model):
 def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
     LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
     res = []
-    for i, p in enumerate(probeFeature):
+    
+    metricMat = spd.cdist(probeFeature, galleryFeature, 'cosine')
+    for i, metric in enumerate(metricMat):
+        idx = np.argsort(metric)
+        if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
+            res.append(idx[0])
+        else:
+            res.append(-1)
+    return res
+
+    """ for i, p in enumerate(probeFeature):
         metric = np.zeros( (len(galleryFeature),) )
         # p = p / np.linalg.norm(p)
         for j, g in enumerate(galleryFeature):
@@ -44,7 +55,7 @@ def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
             res.append(idx[0])
         else:
             res.append(-1)
-    return res
+    return res """
 
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
     # 1. load model
@@ -60,24 +71,28 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     gallery_list = [(k, v) for k, v in gallery_dict.items()]
     galleryFeature = []
     probeFeature = []
-    prob_imgs = []
-    gallery_imgs = []
+    # prob_imgs = []
+    # gallery_imgs = []
     for _, item in probe_list:
         img0_path = os.path.join(imgset_rpath, item)
         img0 = detect_or_return_origin(img0_path, fmodel)
-        prob_imgs.append(img0)
+        # prob_imgs.append(img0)
+        probeFeature = fmodel.get_feature(img0)
+        probeFeature.append(probeFeature)
 
     for _, item in gallery_list:
         img1_path = os.path.join(imgset_rpath, item)
         img1 = detect_or_return_origin(img1_path, fmodel)
-        gallery_imgs.append(img1)
+        # gallery_imgs.append(img1)
+        galleryfeature = fmodel.get_feature(img1)
+        galleryFeature.append(galleryfeature)
     # 3. face recogonition
-    for img0 in prob_imgs:
+    """ for img0 in prob_imgs:
         probefeature = fmodel.get_feature(img0)
         probeFeature.append(probefeature)
     for img1 in gallery_imgs:
         galleryfeature = fmodel.get_feature(img1)
-        galleryFeature.append(galleryfeature)
+        galleryFeature.append(galleryfeature) """
     
     galleryFeature = np.array(galleryFeature)
     probeFeature = np.array(probeFeature)
