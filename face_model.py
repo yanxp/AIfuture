@@ -66,10 +66,11 @@ class FaceModel(object):
     return nimg
 
   def get_feature(self, aligned):
-    input_blob = np.expand_dims(aligned, axis=0)
-    data = mx.nd.array(input_blob)
+    # input_blob = np.expand_dims(aligned, axis=0)
+    data = mx.nd.array(aligned)
     db = mx.io.DataBatch(data=(data,))
     self.model.forward(db, is_train=False)
-    embedding = self.model.get_outputs()[0].asnumpy()
-    embedding = sklearn.preprocessing.normalize(embedding).flatten()
+    embedding = self.model.get_outputs()[0]
+    embedding = mx.ndarray.L2Normalization(embedding, mode="instance")
+    # print(embedding.shape, embedding.context)
     return embedding

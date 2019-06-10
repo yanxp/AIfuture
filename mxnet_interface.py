@@ -25,7 +25,7 @@ def detect_or_return_origin(img_path, model):
         aligned = np.transpose(new_img, (2,0,1))
         return aligned
 
-def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
+def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3, contains_flip = False):
     LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
     res = []
     
@@ -33,7 +33,10 @@ def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
     for i, metric in enumerate(metricMat):
         idx = np.argsort(metric)
         if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
-            res.append(idx[0])
+            if contains_flip:
+                res.append(idx[0]//2)
+            else:
+                res.append(idx[0])
         else:
             res.append(-1)
     return res
@@ -58,6 +61,7 @@ def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3):
     return res """
 
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
+    flip_match = bool(os.getenv('FLIP_MATCH'))
     # 1. load model
     detector = RetinaFace("./models/testR50", 4, 0, 'net3', 0.4, False, vote=False)
     path, epoch = os.getenv('PRETRAINED_MODEL').split(',')
@@ -71,32 +75,33 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     gallery_list = [(k, v) for k, v in gallery_dict.items()]
     galleryFeature = []
     probeFeature = []
-    # prob_imgs = []
-    # gallery_imgs = []
+    prob_imgs = []
+    gallery_imgs = []
     for _, item in probe_list:
         img0_path = os.path.join(imgset_rpath, item)
         img0 = detect_or_return_origin(img0_path, fmodel)
-        # prob_imgs.append(img0)
-        probeFeature = fmodel.get_feature(img0)
-        probeFeature.append(probeFeature)
+        prob_imgs.append(img0)
 
     for _, item in gallery_list:
         img1_path = os.path.join(imgset_rpath, item)
         img1 = detect_or_return_origin(img1_path, fmodel)
-        # gallery_imgs.append(img1)
-        galleryfeature = fmodel.get_feature(img1)
-        galleryFeature.append(galleryfeature)
+        gallery_imgs.append(img1)
     # 3. face recogonition
-    """ for img0 in prob_imgs:
-        probefeature = fmodel.get_feature(img0)
+    for img0 in prob_imgs:
+        probefeature = fmodel.get_feature([img0])
         probeFeature.append(probefeature)
     for img1 in gallery_imgs:
-        galleryfeature = fmodel.get_feature(img1)
-        galleryFeature.append(galleryfeature) """
+        if flip_match:
+            galleryfeature = fmodel.get_feature([ img1, img1[:,:,::-1] ])
+        else:
+            galleryfeature = fmodel.get_feature([img1])
+        galleryFeature.append(galleryfeature)
     
-    galleryFeature = np.array(galleryFeature)
-    probeFeature = np.array(probeFeature)
-    preds = cal_metric(galleryFeature, probeFeature, "cos", 0.16)
+    # galleryFeature = np.array(galleryFeature)
+    # probeFeature = np.array(probeFeature)
+    galleryFeature = mx.ndarray.concat(*galleryFeature, dim=0).asnumpy()
+    probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy() #np.array(probeFeature)
+    preds = cal_metric(galleryFeature, probeFeature, "cos", 0.18, contains_flip=flip_match)
 
     result = [] # result = [("1", "2"), ("2", "4")]
     for i, p in enumerate(preds):

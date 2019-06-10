@@ -29,6 +29,7 @@ def parse_args():
                         help="detector config type", default='net3')
     parser.add_argument('--nms', type=float, default=0.4)
     parser.add_argument('--nocrop', action="store_true")
+    parser.add_argument('--flip_match', action="store_true")
     args = parser.parse_args()
     return args
     
@@ -105,16 +106,20 @@ if __name__ == '__main__':
     # -------------------------
     # 3. face recogonition
     for img0 in prob_imgs:
-        probefeature = fmodel.get_feature(img0)
+        probefeature = fmodel.get_feature([img0])
         probeFeature.append(probefeature)
 
     for img1 in gallery_imgs:
-        galleryfeature = fmodel.get_feature(img1)
+        if args.flip_match:
+            galleryfeature = fmodel.get_feature([ img1, img1[:,:,::-1] ])
+        else:
+            galleryfeature = fmodel.get_feature([img1])
         galleryFeature.append(galleryfeature)
     # -------------------------
     # 4. prediction
-    galleryFeature = np.array(galleryFeature)
-    probeFeature = np.array(probeFeature)
+    galleryFeature = mx.ndarray.concat(*galleryFeature, dim=0).asnumpy()
+    probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy() #np.array(probeFeature)
+    # print(galleryFeature.shape, galleryFeature.context)
     filename = os.path.join(data_rpath, "ground_truth.csv")
     csvFile = open(filename, 'r')
     readerC = list(csv.reader(csvFile))
@@ -125,7 +130,7 @@ if __name__ == '__main__':
         k = 0
         type1 = 0
         type2 = 0
-        metric = mxnet_interface.cal_metric(galleryFeature, probeFeature, args.type, th)
+        metric = mxnet_interface.cal_metric(galleryFeature, probeFeature, args.type, th, contains_flip=args.flip_match)
         for item in readerC:
             if metric[int(item[0])] == int(item[1]):
                 k += 1

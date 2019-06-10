@@ -23,14 +23,14 @@ config.fc7_no_bias = False
 config.max_steps = 0
 config.data_rand_mirror = True
 config.data_cutoff = False
-config.data_color = 0.125 # 0 # (0, 1) color_aug, (1, +\infty) data compress
-config.random_gray = 0.2
+config.data_color = 0 # (0, 1) color_aug, (1, +\infty) data compress
+config.random_gray = 0.5
 config.data_images_filter = 0
 config.count_flops = True
 config.memonger = False #not work now
 config.dropout = 0
 
-config.use_annots = True # use bbox and landmark infomation
+config.use_annots = False # use bbox and landmark infomation
 # network settings
 network = edict()
 
@@ -124,7 +124,7 @@ dataset.retina.val_targets = ['lfw', 'cfp_fp', 'agedb_30']
 
 dataset.aifuture = edict()
 dataset.aifuture.dataset = 'aifuture'
-dataset.aifuture.dataset_path = '/home/chenriquan/aifuture/af2019-ksyun-training-20190416' # rf-cropped-training
+dataset.aifuture.dataset_path = '/home/chenriquan/aifuture/rf-cropped-training' # af2019-ksyun-training-20190416'
 dataset.aifuture.num_classes = 973
 dataset.aifuture.image_shape = (112,112,3)
 dataset.aifuture.val_targets = ['pair']

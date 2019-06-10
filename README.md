@@ -37,6 +37,8 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 python -u train.py --dataset aifuture --loss arcfac
 ```
 实验停止时，训练集精度大约为95%。另外0002的表现也不错，但是可视化结果看起来不太靠谱，并且训练集精度只有45%左右，估计只是运用finetune之前学到的特征来进行匹配。
 
+* 6月10日 版本1.3
+修改了一些操作到mxnet上进行加速，添加flip_match，将测试margin改为30( 在所提交的 0004 模型上表现更好? )
 # 运行过程
 ## 获得测试结果
 **安装环境**
