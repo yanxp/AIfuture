@@ -68,7 +68,7 @@ config.max_feat_channel = 9999
 
 config.USE_CROP = False #True
 config.USE_DCN = 0
-config.FACE_LANDMARK = False #True
+config.FACE_LANDMARK = True
 config.USE_OCCLUSION = False
 config.USE_BLUR = False
 config.MORE_SMALL_BOX = True
@@ -239,6 +239,15 @@ dataset.retinaface.test_image_set = 'val'
 dataset.retinaface.root_path = 'data'
 dataset.retinaface.dataset_path = 'data/retinaface'
 dataset.retinaface.NUM_CLASSES = 2
+
+dataset.aifuture = edict()
+dataset.aifuture.dataset = 'aifuture'
+dataset.aifuture.image_set = 'train'
+dataset.aifuture.test_image_set = 'val'
+dataset.aifuture.root_path = 'data'
+dataset.aifuture.dataset_path = 'data/aifuture'
+dataset.aifuture.NUM_CLASSES = 2
+
 
 # default settings
 default = edict()

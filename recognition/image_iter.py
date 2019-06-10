@@ -206,8 +206,7 @@ class FaceImageIter(io.DataIter):
         if align == 1 and h==112 and w==112 and landmark is not None:
           nimg = face_preprocess.preprocess(img, box, landmark, image_size="112,112")
         else:
-          lower = - min(max((h - 20) // 2, (w - 20)// 2, 0),  15)
-          margin = np.random.randint(lower, 71)
+          margin = np.random.randint(0, 71)
           nimg = face_preprocess.preprocess(img, box, margin=margin) # margin is only used when landmark is not used
           nimg = cv2.resize(nimg, (h, w))
         

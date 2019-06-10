@@ -59,9 +59,9 @@ class FaceModel(object):
     bbox, points = res
 
     if align:
-      nimg = face_preprocess.preprocess(img, bbox, points, margin=20, image_size='112,112')
+      nimg = face_preprocess.preprocess(img, bbox, points, image_size='112,112')
     else:
-      nimg = face_preprocess.preprocess(img, bbox, margin=20)
+      nimg = face_preprocess.preprocess(img, bbox, margin=30)
     nimg = cv2.cvtColor(nimg, cv2.COLOR_BGR2RGB)
     return nimg
 

@@ -63,7 +63,7 @@ def preprocess(img, bbox=None, landmark=None, **kwargs):
       [62.7299, 92.2041] ], dtype=np.float32 )
     if image_size[1]==112:
       src[:,0] += 8.0
-    dst = landmark.astype(np.float32)
+    dst = landmark.astype(np.float32).reshape((5,2))
 
     tform = trans.SimilarityTransform()
     tform.estimate(dst, src)

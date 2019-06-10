@@ -71,25 +71,26 @@ def crop_train(args, fmodel):
 
           print('save in ', tmp)
         else:
-          annots = fmodel.get_annots(img, thershold=0.02)
+          annots = fmodel.get_annots(img, threshold=0.02)
           s = "0\t" + imgp + '\t' + str(i)
           print(s)
           if annots is not None:
-            s += '\t' + '\t'.join(map(int, annots[0]))
-            landmark = annots[1].reshape((10,))
-            s += '\t' + '\t'.join(map(int, landmark)) + '\n'
-            lst_file.write(s)
+            s += '\t' + '\t'.join(map(str,map(int, annots[0])))
+            if annots[1] is not None:
+                landmark = annots[1].reshape((10,))
+                s += '\t' + '\t'.join(map(str,map(int, landmark)))
+            lst_file.write(s+'\n')
           else:
             lst_file.write(s + '\n')
             not_detected += 1
-            remain_path.append(tmp)
         all_img_num += 1
     
     i += 1
   print('all_img_num: {}, not detected: {}, proportion: {:.3f}'.format(all_img_num, not_detected, not_detected/all_img_num))
 
-  with open(os.path.join(args.output, 'not_detected.txt'), 'w') as f:
-    f.write('\n'.join(remain_path))
+  if len(args.lst) == 0:
+    with open(os.path.join(args.output, 'not_detected.txt'), 'w') as f:
+      f.write('\n'.join(remain_path))
 
 def crop_testA(args, fmodel):
   gallery = os.path.join(args.data_rpath, "list.csv")
