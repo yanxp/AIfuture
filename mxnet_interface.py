@@ -25,11 +25,10 @@ def detect_or_return_origin(img_path, model):
         aligned = np.transpose(new_img, (2,0,1))
         return aligned
 
-def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3, contains_flip = False):
+def cal_metric(galleryFeature, probeFeature, dis_type="cosine", THRESHOD = 0.3, contains_flip = False):
     LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25)) # 1 <= x <= 10
     res = []
-    
-    metricMat = spd.cdist(probeFeature, galleryFeature, 'cosine')
+    metricMat = spd.cdist(probeFeature, galleryFeature, dis_type)
     for i, metric in enumerate(metricMat):
         idx = np.argsort(metric)
         if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
@@ -40,25 +39,6 @@ def cal_metric(galleryFeature, probeFeature, dis_type="l2", THRESHOD = 0.3, cont
         else:
             res.append(-1)
     return res
-
-    """ for i, p in enumerate(probeFeature):
-        metric = np.zeros( (len(galleryFeature),) )
-        # p = p / np.linalg.norm(p)
-        for j, g in enumerate(galleryFeature):
-            # g = g / np.linalg.norm(g)
-            if dis_type == "l2":
-                metric[j] = np.sum((p - g) ** 2)
-            elif dis_type == "l1":
-                metric[j] = np.sqrt(np.sum((p - g)**2))
-            elif dis_type == 'cos':
-                metric[j] = - np.sum(p * g) # from large to small
-        
-        idx = np.argsort(metric)
-        if metric[idx[LEN_THRESHOD]] - metric[idx[0]] >= THRESHOD:
-            res.append(idx[0])
-        else:
-            res.append(-1)
-    return res """
 
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
     flip_match = bool(os.getenv('FLIP_MATCH'))
@@ -101,7 +81,7 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     # probeFeature = np.array(probeFeature)
     galleryFeature = mx.ndarray.concat(*galleryFeature, dim=0).asnumpy()
     probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy() #np.array(probeFeature)
-    preds = cal_metric(galleryFeature, probeFeature, "cos", 0.18, contains_flip=flip_match)
+    preds = cal_metric(galleryFeature, probeFeature, "cosine", 0.18, contains_flip=flip_match)
 
     result = [] # result = [("1", "2"), ("2", "4")]
     for i, p in enumerate(preds):

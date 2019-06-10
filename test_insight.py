@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument('--vis', action="store_true")
     parser.add_argument('--save_crop', action="store_true")
     parser.add_argument('--crop_dir', default="../rf-finalA-cropped")
-    parser.add_argument('--type', default='l1', choices=['l1','l2','cos'])
+    parser.add_argument('--type', default='cosine', choices=['euclidean','cosine'])
     # RetinaNet: prefix, epoch, ctx_id=0, network='net3', nms=0.4, nocrop=False, decay4 = 0.5, vote=False
     parser.add_argument('--pretrained-detector', dest="pdetect",
                         help="detector checkpoint prefix", default="./models/testR50")
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     # -------------------------
     # 4. prediction
     galleryFeature = mx.ndarray.concat(*galleryFeature, dim=0).asnumpy()
-    probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy() #np.array(probeFeature)
+    probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy()
     # print(galleryFeature.shape, galleryFeature.context)
     filename = os.path.join(data_rpath, "ground_truth.csv")
     csvFile = open(filename, 'r')
