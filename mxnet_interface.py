@@ -8,10 +8,10 @@ import mxnet as mx
 from face_model import FaceModel
 from retinaface import RetinaFace
 
-def detect_or_return_origin(img_path, model):
+def detect_or_return_origin(img_path, model, align=False):
     # return RGB image (c, h, w)
     img = cv2.imread(img_path)
-    new_img = model.get_input(img, threshold=0.02)
+    new_img = model.get_input(img, threshold=0.02, align=align)
 
     if new_img is None:
         img = cv2.resize(img, (142, 142))
@@ -41,9 +41,15 @@ def cal_metric(galleryFeature, probeFeature, dis_type="cosine", THRESHOD = 0.3, 
     return res
 
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
-    flip_match = bool(os.getenv('FLIP_MATCH'))
+    align_match = bool(os.getenv('ALIGN_MATCH'))
     # 1. load model
-    detector = RetinaFace("./models/testR50", 4, 0, 'net3', 0.4, False, vote=False)
+    if align_match:
+        detector = RetinaFace("./models/R50", 0, 0, 'net3', 0.4, False, vote=False)
+        _, arg_params, aux_params = mx.model.load_checkpoint('./models/testR50', 4)
+        detector.model.set_params(arg_params, aux_params, allow_missing = True)
+    else:
+        detector = RetinaFace("./models/testR50", 4, 0, 'net3', 0.4, False, vote=False)
+        
     path, epoch = os.getenv('PRETRAINED_MODEL').split(',')
     sym, arg_params, aux_params = mx.model.load_checkpoint(path, int(epoch))
     model = mx.mod.Module(context = mx.gpu(0), symbol = sym)
@@ -59,28 +65,23 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     gallery_imgs = []
     for _, item in probe_list:
         img0_path = os.path.join(imgset_rpath, item)
-        img0 = detect_or_return_origin(img0_path, fmodel)
+        img0 = detect_or_return_origin(img0_path, fmodel, align=align_match)
         prob_imgs.append(img0)
 
     for _, item in gallery_list:
         img1_path = os.path.join(imgset_rpath, item)
-        img1 = detect_or_return_origin(img1_path, fmodel)
+        img1 = detect_or_return_origin(img1_path, fmodel, align=align_match)
         gallery_imgs.append(img1)
     # 3. face recogonition
     for img0 in prob_imgs:
         probefeature = fmodel.get_feature([img0])
         probeFeature.append(probefeature)
     for img1 in gallery_imgs:
-        if flip_match:
-            galleryfeature = fmodel.get_feature([ img1, img1[:,:,::-1] ])
-        else:
-            galleryfeature = fmodel.get_feature([img1])
+        galleryfeature = fmodel.get_feature([img1])
         galleryFeature.append(galleryfeature)
     
-    # galleryFeature = np.array(galleryFeature)
-    # probeFeature = np.array(probeFeature)
     galleryFeature = mx.ndarray.concat(*galleryFeature, dim=0).asnumpy()
-    probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy() #np.array(probeFeature)
+    probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy()
     preds = cal_metric(galleryFeature, probeFeature, "cosine", 0.18, contains_flip=flip_match)
 
     result = [] # result = [("1", "2"), ("2", "4")]
