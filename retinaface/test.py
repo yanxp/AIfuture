@@ -5,16 +5,19 @@ import datetime
 import os
 import glob
 from retinaface import RetinaFace
+import mxnet as mx
 
-thresh = 0.8
-scales = [1024, 1980]
+thresh = 0.02
+scales = [640, 640]
 
 count = 1
 
 gpuid = 0
-detector = RetinaFace('./model/R50', 0, gpuid, 'net3')
+detector = RetinaFace('./models/R50', 0, gpuid, 'net3')
+_, arg_params, aux_params = mx.model.load_checkpoint('./models/testR50', 4)
+detector.model.set_params(arg_params, aux_params, allow_missing = True)
 
-img = cv2.imread('t1.jpg')
+img = cv2.imread('/home/chenriquan/aifuture/af2019-ksyun-training-20190416/images/0/0/b5abe66ac9d7c058aaa0f26fb5655d48.jpg')
 print(img.shape)
 im_shape = img.shape
 target_size = scales[0]

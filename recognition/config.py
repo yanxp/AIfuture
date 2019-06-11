@@ -124,7 +124,7 @@ dataset.retina.val_targets = ['lfw', 'cfp_fp', 'agedb_30']
 
 dataset.aifuture = edict()
 dataset.aifuture.dataset = 'aifuture'
-dataset.aifuture.dataset_path = '/home/chenriquan/aifuture/rf-cropped-training' # af2019-ksyun-training-20190416'
+dataset.aifuture.dataset_path = '/home/chenriquan/aifuture/rf-35margin-training' #rf-cropped-training' # af2019-ksyun-training-20190416'
 dataset.aifuture.num_classes = 973
 dataset.aifuture.image_shape = (112,112,3)
 dataset.aifuture.val_targets = ['pair']
