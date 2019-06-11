@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--nms', type=float, default=0.4)
     parser.add_argument('--nocrop', action="store_true")
     parser.add_argument('--image_size', type=int, default=112, help="output image size")
-    parser.add_argument('--align', action="store_true")
+    parser.add_argument('--noalign', action="store_true")
     parser.add_argument('--dataset', default='train', choices=['train', 'finalA', 'testA'])
     parser.add_argument('--lst', default='', help='use this to generate lst file')
     args = parser.parse_args()
@@ -118,8 +118,13 @@ def crop_testA(args, fmodel):
 def test(args):
   print('test with', args)
   global detector
-  
-  detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
+  if args.noalign:
+    detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
+  else:
+    detector = RetinaFace('models/R50', 0, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
+    _, arg_params, aux_params = mx.model.load_checkpoint(args.prefix, args.epoch)
+    detector.model.set_params(arg_params, aux_params, allow_missing = True)
+
   fmodel = FaceModel(detector)
   if args.dataset == 'train':
     crop_train(args, fmodel)

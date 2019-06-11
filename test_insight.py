@@ -29,11 +29,11 @@ def parse_args():
                         help="detector config type", default='net3')
     parser.add_argument('--nms', type=float, default=0.4)
     parser.add_argument('--nocrop', action="store_true")
-    parser.add_argument('--flip_match', action="store_true")
+    parser.add_argument('--align_match', action="store_true")
     args = parser.parse_args()
     return args
     
-def detect_or_return_origin(img_path, model):
+def detect_or_return_origin(img_path, model, align = False):
     # return RGB image (c, h, w)
     img = cv2.imread(img_path)
 
@@ -44,7 +44,7 @@ def detect_or_return_origin(img_path, model):
         aligned = np.transpose(img, (2,0,1))
         return aligned, True
 
-    new_img = model.get_input(img, threshold=0.02)
+    new_img = model.get_input(img, threshold=0.02, align=align)
 
     if new_img is None:
         img = cv2.resize(img, (142, 142))
@@ -84,7 +84,12 @@ if __name__ == '__main__':
     model.bind(data_shapes=[('data', (1, 3, 112, 112))])
     model.set_params(arg_params, aux_params)
     
-    detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=False)
+    if args.align:
+        detector = RetinaFace('models/R50', 0, 0, args.dnet, args.nms, nocrop=args.nocrop, vote=False)
+        _, arg_params, aux_params = mx.model.load_checkpoint(args.pdetect, args.depoch)
+        detector.model.set_params(arg_params, aux_params, allow_missing = True)
+    else:    
+        detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=False)
     fmodel = FaceModel(detector, model)
 
     # -------------------------------
@@ -97,11 +102,11 @@ if __name__ == '__main__':
     gallery_imgs = []
     for _, item in probe_list:
         img0_path = os.path.join(imgset_rpath, item)
-        img0, hit = detect_or_return_origin(img0_path, fmodel)
+        img0, hit = detect_or_return_origin(img0_path, fmodel, args.align)
         prob_imgs.append(img0)
     for _, item in gallery_list:
         img1_path = os.path.join(imgset_rpath, item)
-        img1, hit = detect_or_return_origin(img1_path, fmodel)
+        img1, hit = detect_or_return_origin(img1_path, fmodel, args.align)
         gallery_imgs.append(img1)
     # -------------------------
     # 3. face recogonition
@@ -110,10 +115,7 @@ if __name__ == '__main__':
         probeFeature.append(probefeature)
 
     for img1 in gallery_imgs:
-        if args.flip_match:
-            galleryfeature = fmodel.get_feature([ img1, img1[:,:,::-1] ])
-        else:
-            galleryfeature = fmodel.get_feature([img1])
+        galleryfeature = fmodel.get_feature([img1])
         galleryFeature.append(galleryfeature)
     # -------------------------
     # 4. prediction
