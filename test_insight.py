@@ -84,7 +84,7 @@ if __name__ == '__main__':
     model.bind(data_shapes=[('data', (1, 3, 112, 112))])
     model.set_params(arg_params, aux_params)
     
-    if args.align:
+    if args.align_match:
         detector = RetinaFace('models/R50', 0, 0, args.dnet, args.nms, nocrop=args.nocrop, vote=False)
         _, arg_params, aux_params = mx.model.load_checkpoint(args.pdetect, args.depoch)
         detector.model.set_params(arg_params, aux_params, allow_missing = True)
@@ -102,11 +102,11 @@ if __name__ == '__main__':
     gallery_imgs = []
     for _, item in probe_list:
         img0_path = os.path.join(imgset_rpath, item)
-        img0, hit = detect_or_return_origin(img0_path, fmodel, args.align)
+        img0, hit = detect_or_return_origin(img0_path, fmodel, args.align_match)
         prob_imgs.append(img0)
     for _, item in gallery_list:
         img1_path = os.path.join(imgset_rpath, item)
-        img1, hit = detect_or_return_origin(img1_path, fmodel, args.align)
+        img1, hit = detect_or_return_origin(img1_path, fmodel, args.align_match)
         gallery_imgs.append(img1)
     # -------------------------
     # 3. face recogonition
@@ -132,7 +132,7 @@ if __name__ == '__main__':
         k = 0
         type1 = 0
         type2 = 0
-        metric = mxnet_interface.cal_metric(galleryFeature, probeFeature, args.type, th, contains_flip=args.flip_match)
+        metric = mxnet_interface.cal_metric(galleryFeature, probeFeature, args.type, th)
         for item in readerC:
             if metric[int(item[0])] == int(item[1]):
                 k += 1

@@ -53,7 +53,7 @@ def crop_train(args, fmodel):
         imgp = os.path.join(path, imgn)
         img = cv2.imread(imgp)
         if len(args.lst) == 0:
-          new_img = fmodel.get_input(img, threshold=0.02, align=args.align)
+          new_img = fmodel.get_input(img, threshold=0.02, align=not args.noalign)
 
           tmp = os.path.join(output_root, cls, domain)
           os.makedirs(tmp, exist_ok=True)
@@ -103,7 +103,7 @@ def crop_testA(args, fmodel):
     path2 = os.path.join(img_dir, path2)
     for path in (path1, path2):
       img = cv2.imread(path)
-      new_img = fmodel.get_input(img, threshold=0.02, align=args.align)
+      new_img = fmodel.get_input(img, threshold=0.02, align=not args.noalign)
 
       if new_img is None:
         img = cv2.resize(img, (args.image_size + 30, args.image_size + 30))

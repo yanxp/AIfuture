@@ -39,6 +39,9 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 python -u train.py --dataset aifuture --loss arcfac
 
 * 6月10日 版本1.3
 修改了一些操作到mxnet上进行加速，添加flip_match，将测试margin改为30( 在所提交的 0004 模型上表现更好? )
+
+* 6月12日 版本1.5
+使用R50的face landmark以及testR50 的检测参数完成人脸对齐，使用人脸关键点对齐后的数据进行训练和检测
 # 运行过程
 ## 获得测试结果
 **安装环境**

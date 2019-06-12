@@ -82,7 +82,7 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     
     galleryFeature = mx.ndarray.concat(*galleryFeature, dim=0).asnumpy()
     probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy()
-    preds = cal_metric(galleryFeature, probeFeature, "cosine", 0.18, contains_flip=flip_match)
+    preds = cal_metric(galleryFeature, probeFeature, "cosine", 0.15)
 
     result = [] # result = [("1", "2"), ("2", "4")]
     for i, p in enumerate(preds):
