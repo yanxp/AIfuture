@@ -23,8 +23,8 @@ def parse_args():
     parser.add_argument('--type', default='cosine', choices=['euclidean','cosine'])
     # RetinaNet: prefix, epoch, ctx_id=0, network='net3', nms=0.4, nocrop=False, decay4 = 0.5, vote=False
     parser.add_argument('--pretrained-detector', dest="pdetect",
-                        help="detector checkpoint prefix", default="./models/testR50")
-    parser.add_argument('--detector-epoch', dest='depoch', default=4, type=int)
+                        help="detector checkpoint prefix", default="./models/finalR50")
+    parser.add_argument('--detector-epoch', dest='depoch', default=0, type=int)
     parser.add_argument('--detector-network', dest="dnet",
                         help="detector config type", default='net3')
     parser.add_argument('--nms', type=float, default=0.4)
@@ -84,12 +84,13 @@ if __name__ == '__main__':
     model.bind(data_shapes=[('data', (1, 3, 112, 112))])
     model.set_params(arg_params, aux_params)
     
-    if args.align_match:
-        detector = RetinaFace('models/R50', 0, 0, args.dnet, args.nms, nocrop=args.nocrop, vote=False)
-        _, arg_params, aux_params = mx.model.load_checkpoint(args.pdetect, args.depoch)
-        detector.model.set_params(arg_params, aux_params, allow_missing = True)
-    else:    
-        detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=False)
+    # if args.align_match:
+    #     detector = RetinaFace('models/R50', 0, 0, args.dnet, args.nms, nocrop=args.nocrop, vote=False)
+    #     _, arg_params, aux_params = mx.model.load_checkpoint(args.pdetect, args.depoch)
+    #     detector.model.set_params(arg_params, aux_params, allow_missing = True)
+    # else:    
+    
+    detector = RetinaFace(args.pdetect, args.depoch, 0, args.dnet, args.nms, args.nocrop, vote=False)
     fmodel = FaceModel(detector, model)
 
     # -------------------------------

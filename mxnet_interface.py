@@ -44,9 +44,10 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     align_match = bool(os.getenv('ALIGN_MATCH'))
     # 1. load model
     if align_match:
-        detector = RetinaFace("./models/R50", 0, 0, 'net3', 0.4, False, vote=False)
-        _, arg_params, aux_params = mx.model.load_checkpoint('./models/testR50', 4)
-        detector.model.set_params(arg_params, aux_params, allow_missing = True)
+        detector = RetinaFace("./models/finalR50", 0, 0, 'net3', 0.4, False, vote=False)
+        #detector = RetinaFace("./models/R50", 0, 0, 'net3', 0.4, False, vote=False)
+        #_, arg_params, aux_params = mx.model.load_checkpoint('./models/testR50', 4)
+        #detector.model.set_params(arg_params, aux_params, allow_missing = True)
     else:
         detector = RetinaFace("./models/testR50", 4, 0, 'net3', 0.4, False, vote=False)
         
