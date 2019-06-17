@@ -21,11 +21,16 @@ def init():
         detector = RetinaFace("./models/finalR50", 0, 0, 'net3', 0.4, False, vote=False)
     else:
         detector = RetinaFace("./models/testR50", 4, 0, 'net3', 0.4, False, vote=False)
+    path, epoch = os.getenv('PRETRAINED_MODEL').split(',')
     sym, arg_params, aux_params = mx.model.load_checkpoint(path, int(epoch))
     model = mx.mod.Module(context = mx.gpu(0), symbol = sym)
     model.bind(data_shapes=[('data', (1, 3, 112, 112))])
     model.set_params(arg_params, aux_params)
     fmodel = FaceModel(detector, model)
+
+def init2(len_threshod):
+    global LEN_THRESHOD
+    LEN_THRESHOD = len_threshod
 
 def detect_or_return_origin(img_path):
     global fmodel
@@ -48,9 +53,10 @@ def detect_or_return_origin(img_path):
 
 def get_batch_feature(img_batch):
     global fmodel
-    return fmodel.get_feature(img_batch)
+    return fmodel.get_feature(img_batch).asnumpy()
 
 def get_res_from_metric(metric_row):
+    global LEN_THRESHOD
     THRESHOD = 0.15
     idx = np.argsort(metric_row)
     if metric_row[idx[LEN_THRESHOD]] - metric_row[idx[0]] >= THRESHOD:
@@ -59,6 +65,7 @@ def get_res_from_metric(metric_row):
         return -1
 
 def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -> [(str, str), ...]:
+    len_threshod = max(1, int(len(gallery_dict) * 0.25))
     pool = multiprocessing.Pool(4, initializer = init)
     
     probe_list = [(k, v) for k, v in probe_dict.items()]
@@ -68,7 +75,7 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     gallery_imgs = pool.map_async(detect_or_return_origin, 
         (os.path.join(imgset_rpath, v) for k, v in gallery_list))
     
-    pool2 = multiprocessing.Pool() # hide overhead ?
+    pool2 = multiprocessing.Pool(initializer=init2, initargs=(len_threshod,)) # hide overhead ?
 
     batch_size = int(os.getenv('BATCH_SIZE'))
     gallery_imgs = gallery_imgs.get()
@@ -79,11 +86,10 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
         (prob_imgs[i:i + batch_size] for i in range(0, len(prob_imgs), batch_size) ))
     
     galleryFeature = galleryFeature.get()
-    galleryFeature = mx.ndarray.concat(*galleryFeature, dim=0).asnumpy()
+    galleryFeature = np.concatenate(galleryFeature, axis=0)
     probeFeature = probeFeature.get()
-    probeFeature = mx.ndarray.concat(*probeFeature, dim=0).asnumpy()
+    probeFeature = np.concatenate(probeFeature, axis=0)
     # calculate cosine distance
-    LEN_THRESHOD = max(1, int(len(galleryFeature) * 0.25))
     metricMat = spd.cdist(probeFeature, galleryFeature, "cosine")
 
     preds = pool2.map(get_res_from_metric, metricMat)
