@@ -20,9 +20,13 @@ def predict_interface(imgset_rpath: str, gallery_dict: dict, probe_dict: dict) -
     :return [(probe_pic_id, gallery_pic_id),...]，类型为list。
     其中元素是由probe_pic_id和gallery_pic_id组成的tuple。
     """
-    if os.getenv('FRAMEWORK') == 'mxnet':
+    framework = os.getenv('FRAMEWORK')
+    if framework == 'mxnet':
         import mxnet_interface
         return mxnet_interface.predict_interface(imgset_rpath, gallery_dict, probe_dict)
+    elif framework == 'multiprocess':
+        import mult_interface
+        return mult_interface.predict_interface(imgset_rpath, gallery_dict, probe_dict)
     else:
         import pytorch_interface
         return pytorch_interface.predict_interface(imgset_rpath, gallery_dict, probe_dict)
