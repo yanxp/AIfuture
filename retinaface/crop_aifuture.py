@@ -20,8 +20,8 @@ def parse_args():
     parser.add_argument('--data_rpath', help='dataset name', default='', type=str)
     # testing
     parser.add_argument('--prefix', help='model to test with', default='', type=str)
-    parser.add_argument('--epoch', help='model to test with', default=4, type=int)
-    parser.add_argument('--output', help='output folder', default='/home/chenriquan/aifuture/rf-cropped-training', type=str)
+    parser.add_argument('--epoch', help='model to test with', default=0, type=int)
+    parser.add_argument('--output', help='output folder', default='rf-cropped-training', type=str)
     parser.add_argument('--nms', type=float, default=0.4)
     parser.add_argument('--nocrop', action="store_true")
     parser.add_argument('--image_size', type=int, default=112, help="output image size")
@@ -118,12 +118,12 @@ def crop_testA(args, fmodel):
 def test(args):
   print('test with', args)
   global detector
-  if args.noalign:
-    detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
-  else:
-    detector = RetinaFace('models/R50', 0, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
-    _, arg_params, aux_params = mx.model.load_checkpoint(args.prefix, args.epoch)
-    detector.model.set_params(arg_params, aux_params, allow_missing = True)
+  # if args.noalign:
+  detector = RetinaFace(args.prefix, args.epoch, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
+  # else:
+  #   detector = RetinaFace('models/R50', 0, 0, args.network, args.nms, nocrop=args.nocrop, vote=False)
+  #   _, arg_params, aux_params = mx.model.load_checkpoint(args.prefix, args.epoch)
+  #   detector.model.set_params(arg_params, aux_params, allow_missing = True)
 
   fmodel = FaceModel(detector)
   if args.dataset == 'train':

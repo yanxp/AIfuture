@@ -68,7 +68,7 @@ config.max_feat_channel = 9999
 
 config.USE_CROP = False #True
 config.USE_DCN = 0
-config.FACE_LANDMARK = True
+config.FACE_LANDMARK = False #True
 config.USE_OCCLUSION = False
 config.USE_BLUR = False
 config.MORE_SMALL_BOX = True
