@@ -1,7 +1,8 @@
 import os
 import numpy as np
+import sys
 # img_dir = '/home/yanxiaopeng/codework/dataset/af2019-ksyun-training-20190416/images/'
-anno_dir = '/home/chenriquan/aifuture/annotations'
+anno_dir = sys.argv[1] # 'aifuture/annotations'
 
 boxes = []
 fnames = []
