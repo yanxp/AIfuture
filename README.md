@@ -3,15 +3,15 @@
 * python3.6
 
 # 参考的第三方程序或论文
-* (Triplet network)[https://arxiv.org/abs/1412.6622]
-* (insightface)[https://github.com/deepinsight/insightface]
+* [Triplet network](https://arxiv.org/abs/1412.6622)
+* [insightface](https://github.com/deepinsight/insightface)
 
 # 第三方开源模型
-* VGG_FACE.t7(最后未使用): (下载链接)[http://www.robots.ox.ac.uk/~vgg/software/vgg_face/]
-* SSD：(下载链接)[https://anonfile.com/W7rdG4d0b1/face_detector.rar]，该模型是由opencv提供的预训练模型。
-* ImageNet resnet-50：(下载链接)[https://pan.baidu.com/s/1WAkU9ZA_j-OmzO-sdk9whA]，该模型是由insightface提供的预训练模型。
-* RetinaFace-R50: (下载链接)[https://pan.baidu.com/s/1C6nKq122gJxRhb37vK0_LQ]，该模型是由insightface提供的预训练模型。
-* LResNet100E-IR,ArcFace@ms1m-refine-v2：(下载链接)[https://pan.baidu.com/s/1wuRTf2YIsKt76TxFufsRNA]，该模型是由insightface提供的预训练模型。
+* VGG_FACE.t7(最后未使用): [下载链接](http://www.robots.ox.ac.uk/~vgg/software/vgg_face/)
+* SSD：[下载链接](https://anonfile.com/W7rdG4d0b1/face_detector.rar)，该模型是由opencv提供的预训练模型。
+* ImageNet resnet-50：[下载链接](https://pan.baidu.com/s/1WAkU9ZA_j-OmzO-sdk9whA)，该模型是由insightface提供的预训练模型。
+* RetinaFace-R50: [下载链接](https://pan.baidu.com/s/1C6nKq122gJxRhb37vK0_LQ)，该模型是由insightface提供的预训练模型。
+* LResNet100E-IR,ArcFace@ms1m-refine-v2：[下载链接](https://pan.baidu.com/s/1wuRTf2YIsKt76TxFufsRNA)，该模型是由insightface提供的预训练模型。
 # 运行过程
 ## 获得测试结果
 **安装环境**
@@ -104,7 +104,7 @@ CUDA_VISIBLE_DEVICES=4,5,6,7 python -u train.py --dataset aifuture --loss arcfac
 * 6月9日 版本1.2
 发现昨天的训练对于dropout设置错误，重新训练了两个模型，根据可视化结果选择r100arc-0006.params
 ```
-CUDA_VISIBLE_DEVICES=4,5,6,7 python -u train.py --dataset aifuture --loss arcface --lr 0.001 --pretrained ../models/..s/model-r100-ii/model --ckpt 2 --verbose 500
+CUDA_VISIBLE_DEVICES=4,5,6,7 python -u train.py --dataset aifuture --loss arcface --lr 0.001 --pretrained ../models/model-r100-ii/model --ckpt 2 --verbose 500
 ```
 实验停止时，训练集精度大约为95%。另外0002的表现也不错，但是可视化结果看起来不太靠谱，并且训练集精度只有45%左右，估计只是运用finetune之前学到的特征来进行匹配。
 
