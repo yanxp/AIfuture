@@ -40,8 +40,11 @@ $> mv $CODE_ROOT/src/data/label.txt .
 这一步完成后， $CODE_ROOT/retinaface/data/aifuture 目录的结构为
 
 ----$CODE_ROOT/retinaface/data/aifuture
+
 |__ train/
+
 |__images/
+
 |__label.txt
 
 训练 RetinaFace
@@ -86,4 +89,4 @@ $> cd $CODE_ROOT/recogonition
 $> CUDA_VISIBLE_DEVICES=1,2,3,4 python -u train.py --dataset aifuture --verbose 200
 --lr 0.001 --ckpt 2
 
-最终，提交保存的第三个模型$CODE_ROOT/recogonition/models/r100-arcfaceaifuture/model-0003.params
+最终保存第三个模型$CODE_ROOT/recogonition/models/r100-arcfaceaifuture/model-0003.params
