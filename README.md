@@ -1,4 +1,4 @@
-# The Code is for the Second Place of <a href="https://ai.futurelab.tv/contest_detail/4"> AI Future for Comic Face Recognition </a>.
+# The Code is for  <a href="https://ai.futurelab.tv/contest_detail/4"> AI Future Comic Face Recognition Competition </a> of the Second Place.
 
 ### Acknowledgement
 
