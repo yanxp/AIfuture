@@ -9,7 +9,7 @@ easydict==1.9
 enum34==1.1.6
 graphviz==0.8.4
 h5py==2.7.1
-html5lib==0.9999999
+html5lib==0.99999999
 idna==2.8
 imageio==2.5.0
 joblib==0.13.2
